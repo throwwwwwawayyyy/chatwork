@@ -16,7 +16,7 @@ class ClientManager:
         self.event_handler = event_handler
         self.ip, self.port = writer.get_extra_info('peername')
         self.username = None
-        self.privilage = "admin"
+        self.privilage = constants.Privileges.DEFAULT.value
 
         print(f"Connected from: ({self.ip}, {self.port})")
 

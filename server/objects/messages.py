@@ -10,13 +10,11 @@ class Message:
 @dataclass
 class ClientMessage(Message):
     content: bytes
-    ip: str
-    port: str
+    username: str
 
     def serialize(self) -> bytes:
         result = f"{constants.MessageType.CLIENT.value}{constants.SEP}\
-                   {self.ip}{constants.SEP}\
-                   {self.port}{constants.SEP}\
+                   {self.username}{constants.SEP}\
                    {self.content}"
         return result.encode('utf-8')
 
@@ -34,7 +32,7 @@ class AckMessage(Message):
 @dataclass
 class JoinMessage(Message):
     username: str
-    privilage: str
+    privilage: int
 
     def serialize(self):
         result = f"{constants.MessageType.CLIENT.value}{constants.SEP}\

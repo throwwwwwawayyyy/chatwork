@@ -38,7 +38,7 @@ class ServerManager:
                 client.send_message(message)
 
     async def message_received_handler(self, event):
-        print(event.message)
+        print(event.message, end='\n\n')
         await self.broadcast(
             event.message,
             [event.message.ip]

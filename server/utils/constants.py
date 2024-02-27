@@ -14,6 +14,11 @@ class MessageType(Enum):
     CLIENT = 1
     SERVER = 2
     JOIN = 3
+    
+    
+class Privileges(Enum):
+    DEFAULT = 0
+    ADMIN = 1
 
 
 PASSWORD_LEVEL = 0
