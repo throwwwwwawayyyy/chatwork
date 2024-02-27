@@ -22,7 +22,7 @@ class ClientSocketManager:
         self.debug = debug
         self.event_handler = event_handler
 
-        print(CONNECTING_DEBUG_MSG)
+        self.debug_print(CONNECTING_DEBUG_MSG)
         self.conn.connect((self.host, self.port))
         self.debug_print(CONNECTED_DEBUG_MSG)
 
