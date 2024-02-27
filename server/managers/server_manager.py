@@ -1,5 +1,5 @@
 import asyncio
-from managers.client_manager import Client
+from managers.client_manager import ClientManager
 from utils.event_handler import EventHandler
 from objects.messages import Message, JoinMessage
 from objects.events import MessageReceivedEvent, UserJoinedEvent
@@ -7,7 +7,7 @@ from objects.events import MessageReceivedEvent, UserJoinedEvent
 class ServerManager:
     async def create(self) -> None:
         self.server = await asyncio.start_server(self.handle_client, '10.0.0.62', 8642)
-        self.clients: dict[str, Client] = {}
+        self.clients: dict[str, ClientManager] = {}
         self.event_handler = EventHandler()
         
         self.event_handler.listen(
@@ -26,11 +26,11 @@ class ServerManager:
             await self.server.serve_forever()
 
     async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        client = Client(reader, writer, self.event_handler)
+        client = ClientManager(reader, writer, self.event_handler)
         self.clients[client.ip] = client
         await client.start_client()
         
-    async def broadcast(self, message: Message, exclude: list[Client]):
+    async def broadcast(self, message: Message, exclude: list[ClientManager]):
         for client in self.clients.values():
             if client not in exclude:
                 client.send_message(message)
