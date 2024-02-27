@@ -15,12 +15,10 @@ class Message:
 class ClientMessage(Message):
     username: str
     content: str
-    ip: str
-    port: str
 
     def __init__(self, encoded_msg: str) -> None:
         super().__init__(encoded_msg)
-        _, self.ip, self.port, self.username, self.content = encoded_msg.split(SEP)
+        _, self.username, self.content = encoded_msg.split(SEP)
 
     def __str__(self) -> str:
         return f"{self.username}: {self.content}"
@@ -40,15 +38,13 @@ class AckMessage(Message):
         return f"[{SYSTEM_USER}]: {ack_to_text[self.content]}"
 
 class JoinMessage(Message):
-    ip: str
-    port: str
     username: str
     privilage: str
 
     def __init__(self, encoded_msg: str) -> None:
         super().__init__(encoded_msg)
 
-        _, self.ip, self.port, self.username, self.privilage = encoded_msg.split(SEP)
+        _, self.username, self.privilage = encoded_msg.split(SEP)
 
     def __str__(self) -> str:
         return f"[{SYSTEM_USER}]: {self.username} joined!"
