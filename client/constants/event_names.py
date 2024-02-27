@@ -1,0 +1,2 @@
+SEND_EVENT_NAME = "send"
+SHOW_EVENT_NAME = "show"
