@@ -5,7 +5,7 @@ from objects.messages import AckMessage, ClientMessage, Message
 import utils.constants as constants
 
 
-class Client:
+class ClientManager:
     def __init__(self, 
                  reader: asyncio.StreamReader, 
                  writer: asyncio.StreamWriter, 
