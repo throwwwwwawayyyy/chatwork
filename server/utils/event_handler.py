@@ -11,6 +11,6 @@ class EventHandler:
     def listen(self, listener, event_type):
         self.listeners[event_type].append(listener)
 
-    def fire(self, event):
+    async def fire(self, event):
         for listener in self.listeners[type(event)]:
-            listener(event)
+            await listener(event)

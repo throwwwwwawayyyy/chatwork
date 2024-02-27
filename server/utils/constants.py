@@ -4,8 +4,6 @@ from enum import Enum
 class AckCodes(Enum):
     CREDENTIALS_DENIED = 0
     CREDENTIALS_ACCEPTED = 1
-    WHITELIST_OFF = 2
-    WHITELIST_ON = 3
     CLIENT_DENIED = 4
     CLIENT_AUTHORIZED = 5
     ERROR = 6

@@ -1,14 +1,6 @@
+import re
 
-from typing import List, TypeVar
+s = "hrehdfhg123231&"
+p = re.compile(r'[a-z\u0590-\u05fe1-9]+$')
 
-T = TypeVar("T")
-
-def first(container: List[T]) -> T:
-    return container[0]
-  
-if __name__ == "__main__":
-    list_one: List[str] = ["a", "b", "c"]
-    print(first(list_one))
-    
-    list_two: List[int] = [1, 2, 3]
-    print(first(list_two))
+print(bool(p.match(s)))

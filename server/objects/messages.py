@@ -14,7 +14,7 @@ class ClientMessage(Message):
     port: str
 
     def serialize(self) -> bytes:
-        result = f"{constants.MessageType.CLIENT}{constants.SEP}\
+        result = f"{constants.MessageType.CLIENT.value}{constants.SEP}\
                    {self.ip}{constants.SEP}\
                    {self.port}{constants.SEP}\
                    {self.content}"
@@ -23,11 +23,11 @@ class ClientMessage(Message):
 
 @dataclass
 class AckMessage(Message):
-    content: int
+    content: constants.AckCodes
 
     def serialize(self):
-        result = f"{constants.MessageType.ACK}{constants.SEP}\
-                   {self.content}"
+        result = f"{constants.MessageType.ACK.value}{constants.SEP}\
+                   {self.content.value}"
         return result.encode('utf-8')
 
 
@@ -37,7 +37,7 @@ class JoinMessage(Message):
     privilage: str
 
     def serialize(self):
-        result = f"{constants.MessageType.CLIENT}{constants.SEP}\
+        result = f"{constants.MessageType.CLIENT.value}{constants.SEP}\
                    {self.username}{constants.SEP}\
                    {self.privilage}"
         return result.encode('utf-8')

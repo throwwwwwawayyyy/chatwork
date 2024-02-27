@@ -8,5 +8,6 @@ class MessageReceivedEvent:
 
 @dataclass
 class UserJoinedEvent:
+    ip: str
     username: str
     privilage: str
