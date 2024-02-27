@@ -1,9 +1,9 @@
-from server import Server
+from managers.server_manager import ServerManager
 import asyncio
 
 
 async def main():
-    await Server().create()
+    await ServerManager().create()
 
 
 if __name__ == "__main__":

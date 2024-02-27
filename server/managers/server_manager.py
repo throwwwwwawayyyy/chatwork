@@ -1,10 +1,10 @@
 import asyncio
-from client import Client
+from managers.client_manager import Client
 from utils.event_handler import EventHandler
 from objects.messages import Message, JoinMessage
 from objects.events import MessageReceivedEvent, UserJoinedEvent
 
-class Server:
+class ServerManager:
     async def create(self) -> None:
         self.server = await asyncio.start_server(self.handle_client, '10.0.0.62', 8642)
         self.clients: dict[str, Client] = {}
