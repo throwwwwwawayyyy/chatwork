@@ -1,0 +1,6 @@
+HOST_ADDR = "10.0.0.62"
+PORT_NUM = 8642
+DEBUG_DEFAULT = True
+
+CONNECTING_DEBUG_MSG = "Connecting to server..."
+CONNECTED_DEBUG_MSG = "Connected!"
