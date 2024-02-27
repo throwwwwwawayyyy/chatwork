@@ -7,14 +7,12 @@ class MessageType(Enum):
     JOIN = 3
 
 SYSTEM_USER = "System"
-SERVER_USER = "Server"
 YOUR_USER = "You"
 
 USERNAME_LEVEL = 0
 PASSWORD_LEVEL = 1
-WAITING_LEVEL_1 = 2
-WAITING_LEVEL_2 = 3
-CHAT_LEVEL = 4
+WAITING_LEVEL = 2
+CHAT_LEVEL = 3
 
 SEP = "&@^"
 

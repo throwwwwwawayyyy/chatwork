@@ -1,4 +1,4 @@
-from constants.logic import SEP
+from constants.logic import SEP, SYSTEM_USER
 from constants.texts import *
 from models.ack_codes import ack_to_text, errored_ack_codes
 
@@ -19,7 +19,7 @@ class ClientMessage(Message):
     port: str
 
     def __init__(self, encoded_msg: str) -> None:
-        super.__init__(encoded_msg)
+        super().__init__(encoded_msg)
         _, self.ip, self.port, self.username, self.content = encoded_msg.split(SEP)
 
     def __str__(self) -> str:
@@ -29,7 +29,7 @@ class AckMessage(Message):
     content: int
 
     def __init__(self, encoded_msg: str) -> None:
-        super.__init__(encoded_msg)
+        super().__init__(encoded_msg)
 
         _, self.content = encoded_msg.split(SEP)
         self.content = int(self.content)
@@ -37,7 +37,7 @@ class AckMessage(Message):
         self.error = (self.content in errored_ack_codes)
 
     def __str__(self) -> str:
-        return ack_to_text[self.content]
+        return f"[{SYSTEM_USER}]: {ack_to_text[self.content]}"
 
 class JoinMessage(Message):
     ip: str
@@ -46,9 +46,9 @@ class JoinMessage(Message):
     privilage: str
 
     def __init__(self, encoded_msg: str) -> None:
-        super.__init__(encoded_msg)
+        super().__init__(encoded_msg)
 
         _, self.ip, self.port, self.username, self.privilage = encoded_msg.split(SEP)
 
     def __str__(self) -> str:
-        return f"{self.username} joined!"
+        return f"[{SYSTEM_USER}]: {self.username} joined!"

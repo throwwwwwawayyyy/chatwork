@@ -45,9 +45,7 @@ class ChatUI:
             input_hint = PASSWORD_HINT_TEXT
         elif self.level == USERNAME_LEVEL:
             input_hint = USERNAME_HINT_TEXT
-        elif self.level == WAITING_LEVEL_1:
-            input_hint = WAITING_HINT_TEXT
-        elif self.level == WAITING_LEVEL_2:
+        elif self.level == WAITING_LEVEL:
             input_hint = WAITING_HINT_TEXT
         else:
             input_hint = INPUT_HINT_TEXT
@@ -92,7 +90,7 @@ class ChatUI:
             elif self.level == PASSWORD_LEVEL:
                 self.password = msg_content
 
-            if not (self.level == WAITING_LEVEL_1 or self.level == WAITING_LEVEL_2):
+            if self.level != WAITING_LEVEL:
                 self.event_handler.trigger_event(SEND_EVENT_NAME, msg_content)
 
                 if self.level == CHAT_LEVEL:
