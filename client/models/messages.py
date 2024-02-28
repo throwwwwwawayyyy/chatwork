@@ -5,7 +5,7 @@ from models.ack_codes import ack_to_text, errored_ack_codes
 class Message:
     error: bool
 
-    def __init__(self, encoded_msg) -> None:
+    def __init__(self, encoded_msg: str) -> None:
         self.error = False
 
     def __str__(self) -> str:
@@ -39,12 +39,13 @@ class AckMessage(Message):
 
 class JoinMessage(Message):
     username: str
-    privilage: str
+    privilege: int
 
     def __init__(self, encoded_msg: str) -> None:
         super().__init__(encoded_msg)
 
-        _, self.username, self.privilage = encoded_msg.split(SEP)
+        _, self.username, self.privilege = encoded_msg.split(SEP)
+        self.privilege = int(self.privilege)
 
     def __str__(self) -> str:
         return f"[{SYSTEM_USER}]: {self.username} joined!"

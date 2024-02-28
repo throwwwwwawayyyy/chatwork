@@ -7,9 +7,11 @@ from objects.events import MessageReceivedEvent, UserJoinedEvent
 
 class ServerManager:
     async def create(self) -> None:
-        self.server = await asyncio.start_server(self.handle_client, '10.0.0.62', 8642)
+        self.server = await asyncio.start_server(self.handle_client, '127.0.0.1', 8642)
         self.clients: dict[str, ClientManager] = {}
         self.event_handler = EventHandler()
+
+        
 
         self.event_handler.listen(
             self.message_received_handler,

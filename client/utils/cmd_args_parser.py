@@ -4,7 +4,7 @@ from constants.communication import HOST_ADDR, PORT_NUM, DEBUG_DEFAULT
 from constants.logic import DEBUG_KEYWORD
 
 def from_args() -> tuple[str, int, bool]:
-    if(len(sys.argv) < 3):
+    if(len(sys.argv) < 4):
         host_addr = HOST_ADDR
         port_num = PORT_NUM
         debug_flag = DEBUG_DEFAULT

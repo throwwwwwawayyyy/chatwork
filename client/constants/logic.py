@@ -6,6 +6,10 @@ class MessageType(Enum):
     SERVER = 2
     JOIN = 3
 
+class Privileges(Enum):
+    DEFAULT = 0
+    ADMIN = 1
+
 SYSTEM_USER = "System"
 YOUR_USER = "You"
 
@@ -19,3 +23,5 @@ SEP = "&@^"
 EXIT_MESSAGE = "exit"
 
 DEBUG_KEYWORD = "-debug"
+
+PASSWORD_DISPLAY_CHARACTER = "*"

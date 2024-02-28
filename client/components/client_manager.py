@@ -25,6 +25,7 @@ class ClientSocketManager:
         self.event_handler = event_handler
 
         self.debug_print(CONNECTING_DEBUG_MSG)
+        self.debug_print(f"{self.host}, {self.port}")
         self.conn.connect((self.host, self.port))
         self.debug_print(CONNECTED_DEBUG_MSG)
 
@@ -44,7 +45,7 @@ class ClientSocketManager:
     def send_message(self, msg: str):
         data_to_send = msg.encode()
         self.conn.send(data_to_send)
-        self.debug_log(msg)
+        #self.debug_log(msg)
 
     def listen_to_messages(self):
         while(True):
