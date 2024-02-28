@@ -2,11 +2,21 @@ from dataclasses import dataclass
 from objects.messages import Message
 
 @dataclass
-class MessageReceivedEvent:
+class MessageReceiveEvent:
     message: Message
-    ip: str
+    author: object
     
 
 @dataclass
-class UserJoinedEvent:
+class ClientJoinAttemptEvent:
+    client: object
+    
+
+@dataclass
+class ClientJoinEvent:
+    client: object
+    
+
+@dataclass
+class ClientLeaveEvent:
     client: object

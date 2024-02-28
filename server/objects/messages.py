@@ -32,5 +32,14 @@ class JoinMessage(Message):
     privilage: int
 
     def serialize(self):
-        result = f"{constants.MessageType.CLIENT.value}{constants.SEP}{self.username}{constants.SEP}{self.privilage}"
+        result = f"{constants.MessageType.JOIN.value}{constants.SEP}{self.username}{constants.SEP}{self.privilage}"
+        return result.encode('utf-8')
+
+
+@dataclass
+class LeaveMessage(Message):
+    username: str
+
+    def serialize(self):
+        result = f"{constants.MessageType.LEAVE.value}{constants.SEP}{self.username}"
         return result.encode('utf-8')
