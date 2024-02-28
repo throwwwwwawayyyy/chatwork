@@ -32,6 +32,10 @@ class ServerManager:
         self.event_handler.listen(
             self.client_leave_handler,
             ClientLeaveEvent)
+        
+        self.event_handler.listen(
+            self.client_join_attempt_handler,
+            ClientJoinAttemptEvent)
 
     async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         client = ClientManager(reader, writer, self.event_handler)

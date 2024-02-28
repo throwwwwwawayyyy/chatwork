@@ -58,7 +58,7 @@ class ClientManager:
             else:
                 self.send_message(AckMessage(
                     constants.AckCodes.CREDENTIALS_DENIED))
-
+ 
         self.send_message(AckMessage(constants.AckCodes.CLIENT_AUTHORIZED))
 
         self.username = username.decode('utf-8')
