@@ -20,25 +20,24 @@ class ClientManager:
 
         print(f"Connected from: ({self.ip}, {self.port})")
 
-    def send_message(self, message: Message):
-        print(message.serialize())
-        self.writer.write(message.serialize())
-
     async def start_client(self):
         await self.validate_credentials()
 
         await self.event_handler.fire(
-            UserJoinedEvent(self.ip, self.username, self.privilage))
+            UserJoinedEvent(self))
 
         while True:
             try:
-                content = await self.reader.read(100)
+                content = await self.read_message()
             except ConnectionResetError:
                 print(f"Closing connection with ({self.ip}, {self.port})")
                 break
+            except Exception as e:
+                print(e)
+                break
 
-            message = ClientMessage(content, self.ip, self.port)
-            await self.event_handler.fire(MessageReceivedEvent(message))
+            message = ClientMessage(self.username, content)
+            await self.event_handler.fire(MessageReceivedEvent(message, self.ip))
 
         self.writer.close()
 
@@ -47,8 +46,8 @@ class ClientManager:
         username = ''
 
         while not is_credentials_valid:
-            username = await self.reader.read(100)
-            password = await self.reader.read(100)
+            username = await self.read_message()
+            password = await self.read_message()
 
             if validate_username(username) and validate_password(password):
                 self.send_message(AckMessage(
@@ -60,4 +59,11 @@ class ClientManager:
 
         self.send_message(AckMessage(constants.AckCodes.CLIENT_AUTHORIZED))
 
-        self.username = username
+        self.username = username.decode('utf-8')
+        
+    def send_message(self, message: Message):
+        print(message.serialize())
+        self.writer.write(message.serialize())
+        
+    async def read_message(self):
+        return await self.reader.read(100)

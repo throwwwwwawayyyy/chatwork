@@ -9,23 +9,20 @@ class Message:
 
 @dataclass
 class ClientMessage(Message):
-    content: bytes
     username: str
+    content: bytes
 
     def serialize(self) -> bytes:
-        result = f"{constants.MessageType.CLIENT.value}{constants.SEP}\
-                   {self.username}{constants.SEP}\
-                   {self.content}"
+        result = f"{constants.MessageType.CLIENT.value}{constants.SEP}{self.username}{constants.SEP}{self.content.decode('utf-8')}"
         return result.encode('utf-8')
 
 
 @dataclass
 class AckMessage(Message):
-    content: constants.AckCodes
+    code: constants.AckCodes
 
     def serialize(self):
-        result = f"{constants.MessageType.ACK.value}{constants.SEP}\
-                   {self.content.value}"
+        result = f"{constants.MessageType.ACK.value}{constants.SEP}{self.code.value}"
         return result.encode('utf-8')
 
 
@@ -35,7 +32,5 @@ class JoinMessage(Message):
     privilage: int
 
     def serialize(self):
-        result = f"{constants.MessageType.CLIENT.value}{constants.SEP}\
-                   {self.username}{constants.SEP}\
-                   {self.privilage}"
+        result = f"{constants.MessageType.CLIENT.value}{constants.SEP}{self.username}{constants.SEP}{self.privilage}"
         return result.encode('utf-8')

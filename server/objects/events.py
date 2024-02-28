@@ -4,10 +4,9 @@ from objects.messages import Message
 @dataclass
 class MessageReceivedEvent:
     message: Message
+    ip: str
     
 
 @dataclass
 class UserJoinedEvent:
-    ip: str
-    username: str
-    privilage: str
+    client: object

@@ -29,7 +29,6 @@ class ServerManager:
 
     async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         client = ClientManager(reader, writer, self.event_handler)
-        self.clients[client.ip] = client
         await client.start_client()
 
     async def broadcast(self, message: Message, exclude: list[str]):
@@ -37,13 +36,15 @@ class ServerManager:
             if client.ip not in exclude:
                 client.send_message(message)
 
-    async def message_received_handler(self, event):
+    async def message_received_handler(self, event: MessageReceivedEvent):
         print(event.message, end='\n\n')
         await self.broadcast(
             event.message,
-            [event.message.ip]
+            [event.ip]
         )
 
-    async def user_joined_handler(self, event):
+    async def user_joined_handler(self, event: UserJoinedEvent):
+        client: ClientManager = event.client
+        self.clients[client.ip] = client
         await self.broadcast(JoinMessage(
-            event.username, event.privilage), [event.ip])
+            client.username, client.privilage), [client.ip])
