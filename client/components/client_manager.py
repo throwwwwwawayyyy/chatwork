@@ -1,5 +1,7 @@
 import socket
 import threading
+import datetime
+import os
 
 from components.event_handler import EventHandler
 from constants.event_names import *
@@ -42,6 +44,7 @@ class ClientSocketManager:
     def send_message(self, msg: str):
         data_to_send = msg.encode()
         self.conn.send(data_to_send)
+        self.debug_log(msg)
 
     def listen_to_messages(self):
         while(True):
@@ -54,3 +57,8 @@ class ClientSocketManager:
     def debug_print(self, msg: str):
         if self.debug:
             print(msg)
+
+    def debug_log(self, msg: str):
+        with open(f"{os.getcwd()}/client/debug.log", "a") as f:
+            f.write(f"[{datetime.datetime.now()}][{self.host, self.port}][{msg}]\n")
+            f.close()

@@ -60,7 +60,12 @@ class ChatUI:
         self.messages_win.border()
 
         for i, message in enumerate(self.messages):
-            self.messages_win.addstr(i + 1, 1, message)
+            try:
+                self.messages_win.addstr(i + 1, 1, message)
+            except curses.error:
+                self.messages.pop(0)
+                self.refresh_window()
+                return
 
         self.messages_win.refresh()
 
