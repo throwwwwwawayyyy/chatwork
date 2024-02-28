@@ -1,6 +1,6 @@
 import asyncio
 from utils.event_handler import EventHandler
-from objects.events import MessageReceivedEvent, UserJoinedEvent
+from objects.events import MessageReceiveEvent, ClientJoinEvent, ClientLeaveEvent
 from objects.messages import AckMessage, ClientMessage, Message
 import utils.constants as constants
 from utils.validators import validate_username, validate_password
@@ -24,30 +24,32 @@ class ClientManager:
         await self.validate_credentials()
 
         await self.event_handler.fire(
-            UserJoinedEvent(self))
+            ClientJoinEvent(self))
 
         while True:
             try:
                 content = await self.read_message()
             except ConnectionResetError:
-                print(f"Closing connection with ({self.ip}, {self.port})")
-                break
-            except Exception as e:
-                print(e)
+                self.event_handler.fire(ClientLeaveEvent)
                 break
 
             message = ClientMessage(self.username, content)
-            await self.event_handler.fire(MessageReceivedEvent(message, self.ip))
+            await self.event_handler.fire(MessageReceiveEvent(message, self))
 
+        self.writer.close()
+        
+    async def disconnect(self):
         self.writer.close()
 
     async def validate_credentials(self):
         is_credentials_valid = False
-        username = ''
 
         while not is_credentials_valid:
             username = await self.read_message()
             password = await self.read_message()
+            
+            if not (username and password):
+                break
 
             if validate_username(username) and validate_password(password):
                 self.send_message(AckMessage(
@@ -56,7 +58,7 @@ class ClientManager:
             else:
                 self.send_message(AckMessage(
                     constants.AckCodes.CREDENTIALS_DENIED))
-
+ 
         self.send_message(AckMessage(constants.AckCodes.CLIENT_AUTHORIZED))
 
         self.username = username.decode('utf-8')
@@ -66,4 +68,7 @@ class ClientManager:
         self.writer.write(message.serialize())
         
     async def read_message(self):
-        return await self.reader.read(100)
+        try:
+            return await self.reader.read(100)
+        except ConnectionResetError:
+            self.event_handler.fire(ClientLeaveEvent)
