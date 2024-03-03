@@ -4,7 +4,7 @@ from typing import Any
 
 class Config:
     def __init__(self, filename: str) -> None:
-        with open(f"config/{filename}", 'r') as f:
+        with open(f"server/config/{filename}", 'r') as f:
             self._config: dict = yaml.safe_load(f)
 
     def get_property(self, property_name) -> (Any | None):
