@@ -1,74 +1,40 @@
 import asyncio
 from managers.client_manager import ClientManager
-from utils.event_handler import EventHandler
+from utils.event_handler import EventHandler, ServerHandlers
 from objects.messages import *
 from objects.events import *
 
 
-class ServerManager:
-    async def create(self) -> None:
-        self.server = await asyncio.start_server(self.handle_client, '127.0.0.1', 8642)
+class ServerManager(EventHandler, ServerHandlers):
+    def __init__(self) -> None:
+        self.server: asyncio.Server = None
         self.clients: dict[str, ClientManager] = {}
         self.usernames: list[str] = []
-        self.event_handler = EventHandler()
-        await self.init_listeners()
+    
+    @staticmethod
+    async def create(ip: str, port: int) -> None:
+        obj = ServerManager()
+        obj.server = await asyncio.start_server(obj.handle_client, ip, port)
 
         addrs = ', '.join(str(sock.getsockname())
-                          for sock in self.server.sockets)
+                          for sock in obj.server.sockets)
         print(f'Serving on {addrs}')
 
-        async with self.server:
-            await self.server.serve_forever()
+        async with obj.server:
+            await obj.server.serve_forever()
 
-    async def init_listeners(self):
-        self.event_handler.listen(
-            self.message_receive_handler,
-            MessageReceiveEvent)
+    async def handle_client(self,
+                            reader: asyncio.StreamReader,
+                            writer: asyncio.StreamWriter) -> None:
+        client = ClientManager(reader, writer)
+        if await client.process_credentials():
+            await client.start_client()
+        else:
+            client.disconnect()
 
-        self.event_handler.listen(
-            self.client_join_handler,
-            ClientJoinEvent)
-
-        self.event_handler.listen(
-            self.client_leave_handler,
-            ClientLeaveEvent)
-        
-        self.event_handler.listen(
-            self.client_join_attempt_handler,
-            ClientJoinAttemptEvent)
-
-    async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        client = ClientManager(reader, writer, self.event_handler)
-        await client.start_client()
-
-    async def broadcast(self, message: Message, exclude: list[str]):
+    async def broadcast(self, 
+                        message: Message, 
+                        exclude: list[str]) -> None:
         for client in self.clients.values():
             if client.ip not in exclude:
                 client.send_message(message)
-
-    async def message_receive_handler(self, event: MessageReceiveEvent):
-        print(event.message, end='\n\n')
-        await self.broadcast(
-            event.message,
-            [event.author.ip])
-
-    async def client_join_handler(self, event: ClientJoinEvent):
-        client: ClientManager = event.client
-        self.clients[client.ip] = client
-        self.usernames.append(client.username)
-        await self.broadcast(JoinMessage(
-            client.username, client.privilage), [client.ip])
-
-    async def client_leave_handler(self, event: ClientLeaveEvent):
-        client: ClientManager = event.client
-        self.clients.pop(client.ip)
-        await self.broadcast(LeaveMessage(
-            client.username), [client.ip])
-
-    async def client_join_attempt_handler(self, event: ClientJoinAttemptEvent):
-        client: ClientManager = event.client
-        is_ip_taken = client.ip in self.clients
-        is_username_taken = client.username in self.usernames
-        
-        if is_ip_taken or is_username_taken:
-            client.disconnect()

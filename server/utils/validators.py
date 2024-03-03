@@ -1,9 +1,17 @@
 import re
+from objects.messages import AckMessage
+from utils import constants
 
-def validate_username(username: bytes) -> bool:
+
+def validate_username(self) -> bool:
     p = re.compile(r'[a-z\u0590-\u05fe0-9]+$')
-    m = p.match(username.decode('utf-8'))
+    m = p.match(self.username.decode('utf-8'))
     return bool(m)
 
-def validate_password(password: str):
+def validate_password(password: str) -> bool:
     return password == b'nignig123'
+
+async def validate_credentials(username: str, password: str) -> bool:
+    if validate_username(username) and validate_password(password):
+        return True
+    return False

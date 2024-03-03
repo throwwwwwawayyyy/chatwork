@@ -1,17 +1,18 @@
 import yaml
+from typing import Any
 
 
 class Config:
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         with open(f"config/{filename}", 'r') as f:
             self._config: dict = yaml.safe_load(f)
 
-    def get_property(self, property_name):
+    def get_property(self, property_name) -> (Any | None):
         return self._config.get(property_name)
 
 
 class NetworkConfig(Config):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("network_config.yml")
     
     @property
