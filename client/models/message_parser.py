@@ -1,9 +1,9 @@
 from constants.logic import MessageType, Privileges
 from constants.colors import CLIColors
-from models.messages import Message, AckMessage, ClientMessage, JoinMessage
+from models.message import *
 from models.users import User, UserList
 
-class MessageParser:
+class MessageTypeParser:
     user_list: UserList
 
     def __init__(self) -> None:
@@ -32,7 +32,7 @@ class MessageParser:
             cli_color = CLIColors.SYSTEM_MESSAGE_COLOR.value
             keep_color = True
         else:
-            raise Exception("Invalid Message Type")
+            parsed_msg = InvalidMessage(msg_to_parse)
         
         if parsed_msg.error:
             cli_color = CLIColors.ERROR_COLOR.value

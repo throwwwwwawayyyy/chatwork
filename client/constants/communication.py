@@ -1,6 +1,6 @@
 HOST_ADDR = "127.0.0.1"
 PORT_NUM = 8642
-DEBUG_DEFAULT = True
+CONNECTION_TIMEOUT = 5
 
 CONNECTING_DEBUG_MSG = "Connecting to server..."
-CONNECTED_DEBUG_MSG = "Connected!"
+NOT_CONNECTED_MSG = "No Connection!"

@@ -1,4 +1,4 @@
-class Prompt:
+class UIMessage:
     content: str
     color: int
     keep_color: bool

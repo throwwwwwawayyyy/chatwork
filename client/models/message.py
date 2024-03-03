@@ -1,6 +1,6 @@
 from constants.logic import SEP, SYSTEM_USER
 from constants.texts import *
-from models.ack_codes import ack_to_text, errored_ack_codes
+from constants.ack_codes import ack_to_text, errored_ack_codes
 
 class Message:
     error: bool
@@ -49,3 +49,11 @@ class JoinMessage(Message):
 
     def __str__(self) -> str:
         return f"[{SYSTEM_USER}]: {self.username} joined!"
+    
+class InvalidMessage(Message):
+    def __init__(self, encoded_msg: str) -> None:
+        super().__init__(encoded_msg)
+        self.error = True
+        
+    def __str__(self) -> str:
+        return f"[{SYSTEM_USER}]: {INVALID_MESSAGE_TEXT}"

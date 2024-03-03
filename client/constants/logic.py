@@ -22,6 +22,4 @@ SEP = "&@^"
 
 EXIT_MESSAGE = "exit"
 
-DEBUG_KEYWORD = "-debug"
-
 PASSWORD_DISPLAY_CHARACTER = "*"

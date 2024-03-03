@@ -11,9 +11,9 @@ def init_ui(stdscr):
     chat_ui = ChatUI(event_handler)
 
 def main():
-    host_addr, port_num, debug_flag = from_args()
+    host_addr, port_num = from_args()
 
-    client_manager = ClientSocketManager(host_addr, port_num, event_handler, debug_flag)
+    ClientSocketManager(host_addr, port_num, event_handler, True)
     curses.wrapper(init_ui)
 
 if __name__ == "__main__":
