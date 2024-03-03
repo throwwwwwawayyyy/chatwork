@@ -35,25 +35,25 @@ class ClientManager(EventHandler):
         return True
 
     async def process_credentials(self):
-        while not is_credentials_valid:
+        while True:
             username = await self.read_message()
             password = await self.read_message()
             
             if not (username and password):
                 return False
-            
-            is_credentials_valid = validate_credentials(username, password)
 
-            if is_credentials_valid:
+            if validate_credentials(username, password):
                 self.send_message(AckMessage(
                     constants.AckCodes.CREDENTIALS_ACCEPTED))
-                return True
+                break
             else:
                 self.send_message(AckMessage(
                     constants.AckCodes.CREDENTIALS_DENIED))
                 
         self.send_message(AckMessage(constants.AckCodes.CLIENT_AUTHORIZED))
         self.username = username.decode('utf-8')
+        
+        return True
 
     async def disconnect(self) -> None:
         self.writer.close()
