@@ -11,29 +11,31 @@ from utils.colors_config import colors_config
 from constants.texts import *
 from constants.logic import *
 from constants.event_names import *
-from constants.key_numbers import ENTER_KEY, BACKSPACE_KEY
+from constants.key_numbers import *
 from constants.colors import CLIColors
 
 class ChatUI:
     event_handler: EventHandler
     msg_parser: MessageTypeParser
-    ui_messages: list[UIMessage]
-    input_text: str
-    input_text_ui: str
-    level: int
-
+    
+    ui_messages: list[UIMessage] = []
+    
+    input_text: str = ""
+    input_text_ui: str = ""
+    
+    level: int = USERNAME_LEVEL
     username: str
     password: str
+    
+    start_pos: int = 0
+    curr_pos: int = 0
+    msg_size: int = 0
     
     disconnected: bool = False
 
     def __init__(self, event_handler: EventHandler) -> None:
         self.event_handler = event_handler
         self.msg_parser = MessageTypeParser()
-        self.ui_messages = []
-        self.input_text = ""
-        self.input_text_ui = ""
-        self.level = USERNAME_LEVEL
 
         curses.curs_set(0)
 
@@ -46,6 +48,8 @@ class ChatUI:
 
         self.messages_win = curses.newwin(curses.LINES - 2, curses.COLS, 0, 0)
         self.input_win = curses.newwin(1, curses.COLS, curses.LINES - 1, 0)
+        
+        self.msg_size = curses.LINES - 4
 
         self.run()
 
@@ -72,19 +76,28 @@ class ChatUI:
 
         self.messages_win.clear()
         self.messages_win.border()
+        
+        s = self.curr_pos
 
-        if len(self.ui_messages) > curses.LINES - 4:
-            self.ui_messages.pop(0)
-
-        for i, ui_message in enumerate(self.ui_messages):
+        for i, ui_message in enumerate(self.ui_messages[s:]):
             for j, elm in enumerate(ui_message.content):
                 color = ui_message.color
-                if j > ui_message.content.find(":") and not ui_message.keep_color:
+                if j > ui_message.content.find(UI_SEP) and not ui_message.keep_color:
                     color = CLIColors.DEFAULT_COLOR.value
-
-                self.messages_win.addch(i + 1, j + 2, elm, curses.color_pair(color))
+                
+                if i < self.msg_size:
+                    self.messages_win.addch(i + 1, j + 2, elm, curses.color_pair(color))
 
         self.messages_win.refresh()
+        
+    def add_ui_message(self, content:str, color:int, keep_color:bool):
+        ui_msg = UIMessage(content=content, color=color, keep_color=keep_color)
+        self.ui_messages.append(ui_msg)
+        
+        if len(self.ui_messages) > self.msg_size:
+            self.start_pos += 1
+            
+        self.curr_pos = self.start_pos
 
     def listen_for_message(self):
         self.event_handler.add_listener(SHOW_EVENT_NAME, lambda msg: self.handle_msg(msg))
@@ -99,7 +112,7 @@ class ChatUI:
             if self.level == PASSWORD_LEVEL:
                 self.level = USERNAME_LEVEL
 
-        self.ui_messages.append(UIMessage(content=parsed_msg, color=color, keep_color=keep_color))
+        self.add_ui_message(parsed_msg, color, keep_color)
         self.refresh_window()
         
     def listen_for_disconnection(self):
@@ -109,11 +122,11 @@ class ChatUI:
         if not self.disconnected:
             self.disconnected = True
             
-            content = f"[{SYSTEM_USER}]: {DISCONNECTED_TEXT}"
+            content = f"[{SYSTEM_USER}]{UI_SEP} {DISCONNECTED_TEXT}"
             color = CLIColors.ERROR_COLOR.value
             keep_color = True
         
-            self.ui_messages.append(UIMessage(content=content, color=color, keep_color=keep_color))
+            self.add_ui_message(content, color, keep_color)
             self.refresh_window()
 
     def handle_enter(self):
@@ -144,13 +157,18 @@ class ChatUI:
                 elif self.level == CHAT_LEVEL:
                     content, color = input_prompt(msg_content)
 
-                prompt = UIMessage(content=content, color=color, keep_color=keep_color)
-                self.ui_messages.append(prompt)
+                self.add_ui_message(content, color, keep_color)
 
     def handle_backspace(self):
         if self.input_text != "":
             self.input_text = self.input_text[:-1]
             self.input_text_ui = self.input_text_ui[:-1]
+            
+    def handle_up(self):
+        self.curr_pos = max(self.curr_pos - 1, 0)
+    
+    def handle_down(self):
+        self.curr_pos = min(self.curr_pos + 1, len(self.ui_messages) - self.msg_size)
             
     def handle_key(self, key: int) -> str:
         self.input_text += chr(key)
@@ -166,12 +184,16 @@ class ChatUI:
 
         while True:
             self.refresh_window()
-            key = self.input_win.getch()
+            key = self.stdscr.getch()
             
             if key:
                 if key == ENTER_KEY:
                     self.handle_enter()
                 elif key == BACKSPACE_KEY:
                     self.handle_backspace()
+                elif key == UP_KEY:
+                    self.handle_up()
+                elif key == DOWN_KEY:
+                    self.handle_down()
                 else:
                     self.handle_key(key)

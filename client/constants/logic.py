@@ -19,6 +19,7 @@ WAITING_LEVEL = 2
 CHAT_LEVEL = 3
 
 SEP = "&@^"
+UI_SEP = ":"
 
 EXIT_MESSAGE = "exit"
 

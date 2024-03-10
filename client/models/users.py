@@ -17,7 +17,7 @@ class User:
         return True
 
 class UserList:
-    user_list: list
+    user_list: list[User]
 
     def __init__(self) -> None:
         self.user_list = []

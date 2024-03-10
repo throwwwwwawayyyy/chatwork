@@ -14,3 +14,5 @@ CLIENT_AUTHORIZED_TEXT = "Client authorised."
 ERROR_TEXT = "Something went wrong!"
 INVALID_MESSAGE_TEXT = "Invalid Message."
 DISCONNECTED_TEXT = "Connection Ended!"
+
+JOINED_MSG_TEXT = " joined!"

@@ -2,6 +2,8 @@ from constants.logic import SEP, SYSTEM_USER
 from constants.texts import *
 from constants.ack_codes import ack_to_text, errored_ack_codes
 
+from utils.build_message import build_message
+
 class Message:
     error: bool
 
@@ -21,7 +23,7 @@ class ClientMessage(Message):
         _, self.username, self.content = encoded_msg.split(SEP)
 
     def __str__(self) -> str:
-        return f"{self.username}: {self.content}"
+        return build_message(self.username, self.content)
 
 class AckMessage(Message):
     content: int
@@ -35,7 +37,7 @@ class AckMessage(Message):
         self.error = (self.content in errored_ack_codes)
 
     def __str__(self) -> str:
-        return f"[{SYSTEM_USER}]: {ack_to_text[self.content]}"
+        return build_message(SYSTEM_USER, ack_to_text[self.content])
 
 class JoinMessage(Message):
     username: str
@@ -48,7 +50,7 @@ class JoinMessage(Message):
         self.privilege = int(self.privilege)
 
     def __str__(self) -> str:
-        return f"[{SYSTEM_USER}]: {self.username} joined!"
+        return build_message(SYSTEM_USER, self.username + JOINED_MSG_TEXT)
     
 class InvalidMessage(Message):
     def __init__(self, encoded_msg: str) -> None:
@@ -56,4 +58,4 @@ class InvalidMessage(Message):
         self.error = True
         
     def __str__(self) -> str:
-        return f"[{SYSTEM_USER}]: {INVALID_MESSAGE_TEXT}"
+        return build_message(SYSTEM_USER, INVALID_MESSAGE_TEXT)
