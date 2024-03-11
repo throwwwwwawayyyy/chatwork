@@ -16,3 +16,5 @@ INVALID_MESSAGE_TEXT = "Invalid Message."
 DISCONNECTED_TEXT = "Connection Ended!"
 
 JOINED_MSG_TEXT = " joined!"
+USERNAME_MSG_TEXT = "username "
+PASSWORD_MSG_TEXT = "password "

@@ -5,7 +5,7 @@ from components.event_handler import EventHandler
 from models.message_parser import MessageTypeParser
 from models.ui_message import UIMessage
 
-from utils.input_display import input_prompt, username_prompt, password_prompt
+from utils.build_message import build_input_message, build_username_message, build_password_message
 from utils.colors_config import colors_config
 
 from constants.texts import *
@@ -148,14 +148,14 @@ class ChatUI:
                 if self.level == USERNAME_LEVEL:
                     self.username = msg_content
                     self.level += 1
-                    content, color = username_prompt(msg_content)
+                    content, color = build_username_message(msg_content)
                     keep_color = True
                 elif self.level == PASSWORD_LEVEL:
                     self.password = msg_content
-                    content, color = password_prompt(msg_content)
+                    content, color = build_password_message(msg_content)
                     keep_color = True
                 elif self.level == CHAT_LEVEL:
-                    content, color = input_prompt(msg_content)
+                    content, color = build_input_message(msg_content)
 
                 self.add_ui_message(content, color, keep_color)
 
