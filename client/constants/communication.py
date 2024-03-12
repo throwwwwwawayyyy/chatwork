@@ -3,4 +3,5 @@ PORT_NUM = 8642
 CONNECTION_TIMEOUT = 5
 
 CONNECTING_DEBUG_MSG = "Connecting to server..."
-NOT_CONNECTED_MSG = "No Connection!"
+CONNECTED_DEBUG_MSG = "Connected!"
+NOT_CONNECTED_DEBUG_MSG = "No Connection!"

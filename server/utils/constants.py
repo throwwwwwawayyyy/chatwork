@@ -23,3 +23,6 @@ class Privileges(Enum):
 
 
 SEP = "&@^"
+
+RSA_KEY_DEFAULT_SIZE = 1024
+RSA_KEY_END_HEADER = b"\n-----END RSA PUBLIC KEY-----\n"

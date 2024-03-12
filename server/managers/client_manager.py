@@ -1,10 +1,10 @@
 import asyncio
+from managers.encryption_manager import EncryptionManager
 from utils.event_handler import EventHandler
 from objects.events import MessageReceiveEvent, ClientJoinEvent, ClientLeaveEvent
 from objects.messages import AckMessage, ClientMessage, Message
 import utils.constants as constants
 from utils.validators import validate_credentials
-
 
 class ClientManager(EventHandler):
     def __init__(self,
@@ -15,8 +15,12 @@ class ClientManager(EventHandler):
         self.ip, self.port = writer.get_extra_info('peername')
         self.username = None
         self.privilage = constants.Privileges.DEFAULT.value
+        self.encryptor = EncryptionManager()
 
         print(f"Connected from: ({self.ip}, {self.port})")
+        
+    async def init_keys(self):
+        await self.encryptor.share_keys(self.reader, self.writer)
 
     async def start_client(self) -> None:
         await super().fire(
@@ -59,11 +63,16 @@ class ClientManager(EventHandler):
         self.writer.close()
         
     def send_message(self, message: Message):
-        print(message.serialize())
-        self.writer.write(message.serialize())
+        raw_message = message.serialize()
+        encrypted_raw_message = self.encryptor.encrypt(raw_message)
+        
+        print(raw_message)
+        self.writer.write(encrypted_raw_message)
         
     async def read_message(self):
         try:
-            return await self.reader.read(100)
+            encrypted_raw_message = await self.reader.read(200)
+            raw_message = self.encryptor.decrypt(encrypted_raw_message)
+            return raw_message
         except ConnectionResetError:
             super().fire(ClientLeaveEvent)

@@ -32,14 +32,16 @@ class ChatUI:
     msg_size: int = 0
     
     disconnected: bool = False
+    is_exit_triggered: bool = False
 
-    def __init__(self, event_handler: EventHandler) -> None:
+    def __init__(self, stdscr, event_handler: EventHandler) -> None:
+        self.stdscr = stdscr
         self.event_handler = event_handler
         self.msg_parser = MessageTypeParser()
-
+        
+    def __enter__(self):
         curses.curs_set(0)
 
-        self.stdscr = curses.initscr()
         self.stdscr.keypad(True)
         self.stdscr.clear()
         self.stdscr.refresh()
@@ -50,11 +52,12 @@ class ChatUI:
         self.input_win = curses.newwin(1, curses.COLS, curses.LINES - 1, 0)
         
         self.msg_size = curses.LINES - 4
-
-        self.run()
-
+        
+        return self
+        
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         curses.endwin()
+        self.event_handler.trigger_event(EXIT_EVENT_NAME)
 
     def refresh_window(self) -> None:
         input_hint: str
@@ -137,7 +140,7 @@ class ChatUI:
         if msg_content == "":
             pass
         elif msg_content == EXIT_MESSAGE:
-            os._exit(0)
+            self.is_exit_triggered = True
         else:
             if self.level != WAITING_LEVEL and not self.disconnected:
                 self.event_handler.trigger_event(SEND_EVENT_NAME, msg_content)
@@ -182,7 +185,7 @@ class ChatUI:
         self.listen_for_message()
         self.listen_for_disconnection()
 
-        while True:
+        while not self.is_exit_triggered:
             self.refresh_window()
             key = self.stdscr.getch()
             

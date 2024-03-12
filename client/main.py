@@ -7,14 +7,16 @@ from utils.cmd_args_parser import from_args
 
 event_handler = EventHandler()
 
-def init_ui(stdscr):
-    chat_ui = ChatUI(event_handler)
+def run_ui(stdscr):
+    with ChatUI(stdscr, event_handler) as chat_ui:
+        chat_ui.run()
 
 def main():
     host_addr, port_num = from_args()
 
-    ClientSocketManager(host_addr, port_num, event_handler, True)
-    curses.wrapper(init_ui)
+    client = ClientSocketManager(host_addr, port_num, event_handler, True)
+    if client.connected:
+        curses.wrapper(run_ui)
 
 if __name__ == "__main__":
     main()

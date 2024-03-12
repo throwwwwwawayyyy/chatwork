@@ -27,6 +27,7 @@ class ServerManager(EventHandler, ServerHandlers):
                             reader: asyncio.StreamReader,
                             writer: asyncio.StreamWriter) -> None:
         client = ClientManager(reader, writer)
+        await client.init_keys()
         if await client.process_credentials():
             await client.start_client()
         else:
