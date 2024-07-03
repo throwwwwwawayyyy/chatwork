@@ -20,7 +20,7 @@ class MessageTypeParser:
                 parsed_msg.color = CLIColors.ADMIN_MESSAGE_COLOR.value
         elif msg_to_parse.startswith(str(MessageType.ACK.value)):
             parsed_msg = AckMessage(msg_to_parse)
-        elif msg_to_parse.startswith(str(MessageType.SERVER.value)):
+        elif msg_to_parse.startswith(str(MessageType.JOIN.value)):
             parsed_msg = JoinMessage(msg_to_parse)
             
             # Register user to userlist
