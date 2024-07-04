@@ -7,3 +7,4 @@ class CLIColors(Enum):
     SYSTEM_MESSAGE_COLOR = 4
     YOUR_MESSAGE_COLOR = 5
     ERROR_COLOR = 6
+    JOIN_LEFT_COLOR = 7

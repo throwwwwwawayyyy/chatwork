@@ -35,3 +35,9 @@ class UserList:
                 return _user
             
         return None
+    
+    def del_user(self, name: str) -> None:
+        for _user in self.user_list:
+            if _user.name == name:
+                self.user_list.remove(_user)
+                break

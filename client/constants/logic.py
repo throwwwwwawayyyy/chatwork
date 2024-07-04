@@ -5,6 +5,7 @@ class MessageType(Enum):
     CLIENT = 1
     SERVER = 2
     JOIN = 3
+    LEFT = 4
 
 class Privileges(Enum):
     DEFAULT = 0

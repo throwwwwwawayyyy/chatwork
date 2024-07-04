@@ -59,7 +59,7 @@ class JoinMessage(Message):
         _, self.username, self.privilege = encoded_msg.split(SEP)
         self.privilege = int(self.privilege)
         
-        self.color = CLIColors.SYSTEM_MESSAGE_COLOR.value
+        self.color = CLIColors.JOIN_LEFT_COLOR.value
         self.keep_color = True
 
     def __str__(self) -> str:
@@ -75,3 +75,17 @@ class InvalidMessage(Message):
         
     def __str__(self) -> str:
         return build_message(SYSTEM_USER, INVALID_MESSAGE_TEXT)
+    
+class LeaveMessage(Message):
+    username: str
+    
+    def __init__(self, encoded_msg: str) -> None:
+        super().__init__(encoded_msg)
+        
+        _, self.username = encoded_msg.split(SEP)
+        
+        self.color = CLIColors.JOIN_LEFT_COLOR.value
+        self.keep_color = True
+        
+    def __str__(self) -> str:
+        return build_message(SYSTEM_USER, self.username + LEFT_MSG_TEXT)

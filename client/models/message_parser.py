@@ -25,6 +25,11 @@ class MessageTypeParser:
             
             # Register user to userlist
             self.user_list.add_user(User(parsed_msg.username, parsed_msg.privilege))
+        elif msg_to_parse.startswith(str(MessageType.LEFT.value)):
+            parsed_msg = LeaveMessage(msg_to_parse)
+            
+            # Delete user from userlist
+            self.user_list.del_user(parsed_msg.username)
         else:
             parsed_msg = InvalidMessage(msg_to_parse)
 

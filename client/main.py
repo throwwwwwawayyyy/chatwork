@@ -3,7 +3,7 @@ import curses
 from components.event_handler import EventHandler
 from components.ui import ChatUI
 from components.client_manager import ClientSocketManager
-from utils.cmd_args_parser import from_args
+from components.config_manager import NetworkConfig
 
 event_handler = EventHandler()
 
@@ -12,9 +12,9 @@ def run_ui(stdscr):
         chat_ui.run()
 
 def main():
-    host_addr, port_num = from_args()
+    network_config = NetworkConfig()
 
-    client = ClientSocketManager(host_addr, port_num, event_handler, True)
+    client = ClientSocketManager(network_config.ip, network_config.port, event_handler, True)
     if client.connected:
         curses.wrapper(run_ui)
 

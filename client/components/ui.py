@@ -1,5 +1,4 @@
 import curses
-import os
 
 from components.event_handler import EventHandler
 from models.message_parser import MessageTypeParser
