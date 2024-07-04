@@ -4,7 +4,7 @@ import utils.constants as constants
 
 class Message:
     def serialize(self):
-        print("Don't instanciate a Message type directly. Use a subclass")
+        print("Don't instantiate a Message type directly. Use a subclass")
 
 
 @dataclass
