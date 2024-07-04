@@ -4,18 +4,18 @@ from objects.messages import Message
 @dataclass
 class MessageReceiveEvent:
     message: Message
-    author: object
-    
+    client: object
+
 
 @dataclass
 class ClientJoinAttemptEvent:
     client: object
-    
+
 
 @dataclass
 class ClientJoinEvent:
     client: object
-    
+
 
 @dataclass
 class ClientLeaveEvent:

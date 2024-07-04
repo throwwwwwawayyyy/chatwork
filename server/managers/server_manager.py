@@ -1,14 +1,16 @@
 import asyncio
 from managers.client_manager import ClientManager
-from utils.event_handler import EventHandler, ServerHandlers
+from utils.server_handlers import ServerHandlers
+from utils.event_handler import EventHandler
 from objects.messages import *
 from objects.events import *
 
 
 class ServerManager(EventHandler, ServerHandlers):
     def __init__(self) -> None:
+        super().__init__()
         self.server: asyncio.Server = None
-        self.clients: dict[str, ClientManager] = {}
+        self.clients: list[ClientManager] = []
         self.usernames: list[str] = []
     
     @staticmethod
@@ -16,9 +18,9 @@ class ServerManager(EventHandler, ServerHandlers):
         obj = ServerManager()
         obj.server = await asyncio.start_server(obj.handle_client, ip, port)
 
-        addrs = ', '.join(str(sock.getsockname())
+        addresses = ', '.join(str(sock.getsockname())
                           for sock in obj.server.sockets)
-        print(f'Serving on {addrs}')
+        print(f'Serving on {addresses}')
 
         async with obj.server:
             await obj.server.serve_forever()
@@ -35,7 +37,8 @@ class ServerManager(EventHandler, ServerHandlers):
 
     async def broadcast(self, 
                         message: Message, 
-                        exclude: list[str]) -> None:
-        for client in self.clients.values():
-            if client.ip not in exclude:
+                        *client_validators: tuple[callable]) -> None:
+        for client in self.clients:
+            is_valid = all([validator(client) for validator in client_validators])
+            if is_valid:
                 client.send_message(message)

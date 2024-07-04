@@ -14,15 +14,16 @@ class ClientManager(EventHandler):
         self.writer = writer
         self.ip, self.port = writer.get_extra_info('peername')
         self.username = None
-        self.privilage = constants.Privileges.DEFAULT.value
-        self.encryptor = EncryptionManager()
+        self.privilege = constants.Privileges.DEFAULT.value
+        self.encryption_manager = EncryptionManager()
 
         print(f"Connected from: ({self.ip}, {self.port})")
         
     async def init_keys(self):
-        await self.encryptor.share_keys(self.reader, self.writer)
+        await self.encryption_manager.share_keys(self.reader, self.writer)
 
     async def start_client(self) -> None:
+        print(f"Starting client")
         await super().fire(
             ClientJoinEvent(self))
 
@@ -43,6 +44,8 @@ class ClientManager(EventHandler):
             username = await self.read_message()
             password = await self.read_message()
             
+            print(username, password)
+            
             if not (username and password):
                 return False
 
@@ -59,20 +62,21 @@ class ClientManager(EventHandler):
         
         return True
 
-    async def disconnect(self) -> None:
+    def disconnect(self) -> None:
         self.writer.close()
         
     def send_message(self, message: Message):
         raw_message = message.serialize()
-        encrypted_raw_message = self.encryptor.encrypt(raw_message)
-        
-        print(raw_message)
+        encrypted_raw_message = self.encryption_manager.encrypt(raw_message)
         self.writer.write(encrypted_raw_message)
         
     async def read_message(self):
         try:
             encrypted_raw_message = await self.reader.read(200)
-            raw_message = self.encryptor.decrypt(encrypted_raw_message)
+            if not encrypted_raw_message:
+                await super().fire(ClientLeaveEvent(self))
+                return
+            raw_message = self.encryption_manager.decrypt(encrypted_raw_message)
             return raw_message
         except ConnectionResetError:
-            super().fire(ClientLeaveEvent)
+            await super().fire(ClientLeaveEvent(self))
