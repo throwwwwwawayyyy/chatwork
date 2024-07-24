@@ -33,7 +33,7 @@ class ClientManager(EventHandler):
             if not content:
                 break
             
-            message = ClientMessage(self.username, content)
+            message = ClientMessage.from_bytes(content)
             await super().fire(MessageReceiveEvent(message, self))
 
         self.disconnect()
