@@ -1,6 +1,7 @@
 from dataclasses import dataclass, asdict
 import json
 import utils.constants as constants
+from utils.constants import MessageType
 
 
 class Message:
@@ -9,7 +10,7 @@ class Message:
 
     def serialize(self) -> bytes:
         result = asdict(self)
-        result["type"] = type(self)
+        result["type"] = type(self).msg_type
         return bytes(json.dumps(result))
     
     def from_bytes(encoded_msg: bytes):
@@ -20,6 +21,7 @@ class Message:
 
 @dataclass
 class ClientMessage(Message):
+    msg_type = MessageType.CLIENT
     username: str
     content: bytes
 
@@ -33,6 +35,7 @@ class ClientMessage(Message):
 
 @dataclass
 class AckMessage(Message):
+    msg_type = MessageType.ACK
     code: constants.AckCodes
 
     @staticmethod
@@ -44,6 +47,7 @@ class AckMessage(Message):
 
 @dataclass
 class JoinMessage(Message):
+    msg_type = MessageType.JOIN
     username: str
     privilege: int
 
@@ -57,6 +61,7 @@ class JoinMessage(Message):
 
 @dataclass
 class LeaveMessage(Message):
+    msg_type = MessageType.LEAVE
     username: str
 
     @staticmethod

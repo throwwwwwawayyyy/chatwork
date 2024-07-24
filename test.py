@@ -1,8 +1,10 @@
+import json
+
 class B:
     @staticmethod
     def test():
         print("test")
 
 b = B()
-t = type(b)
-t.test()
+t = {1: type(b)}
+print(json.dumps(t))
