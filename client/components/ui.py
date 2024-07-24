@@ -1,9 +1,11 @@
 import curses
 
 from components.event_handler import EventHandler
-from models.message_parser import MessageTypeParser
+
+from models.message import *
 from models.ui_message import UIMessage
 
+from utils.message_parser import MessageTypeParser
 from utils.build_message import build_input_message, build_username_message, build_password_message
 from utils.colors_config import colors_config
 
@@ -15,7 +17,6 @@ from constants.colors import CLIColors
 
 class ChatUI:
     event_handler: EventHandler
-    msg_parser: MessageTypeParser
     
     ui_messages: list[UIMessage] = []
     
@@ -36,7 +37,6 @@ class ChatUI:
     def __init__(self, stdscr, event_handler: EventHandler) -> None:
         self.stdscr = stdscr
         self.event_handler = event_handler
-        self.msg_parser = MessageTypeParser()
         
     def __enter__(self):
         curses.curs_set(0)
@@ -84,7 +84,7 @@ class ChatUI:
         for i, ui_message in enumerate(self.ui_messages[s:]):
             for j, elm in enumerate(ui_message.content):
                 color = ui_message.color
-                if j > ui_message.content.find(UI_SEP) and not ui_message.keep_color:
+                if j > ui_message.content.find(UI_SEP) and not ui_message.keep_color_after_username:
                     color = CLIColors.DEFAULT_COLOR.value
                 
                 if i < self.msg_size:
@@ -92,8 +92,8 @@ class ChatUI:
 
         self.messages_win.refresh()
         
-    def add_ui_message(self, content:str, color:int, keep_color:bool):
-        ui_msg = UIMessage(content=content, color=color, keep_color=keep_color)
+    def add_ui_message(self, content:str, color:int, keep_color_after_username:bool):
+        ui_msg = UIMessage(content=content, color=color, keep_color_after_username=keep_color_after_username)
         self.ui_messages.append(ui_msg)
         
         if len(self.ui_messages) > self.msg_size:
@@ -104,17 +104,17 @@ class ChatUI:
     def listen_for_message(self):
         self.event_handler.add_listener(SHOW_EVENT_NAME, lambda msg: self.handle_msg(msg))
 
-    def handle_msg(self, msg: str):
-        parsed_msg, error, color, keep_color = self.msg_parser.parse(msg)
+    def handle_msg(self, msg_to_parse: str):
+        msg_obj = MessageTypeParser.parse(msg_to_parse)
 
-        if not error:
+        if not msg_obj.error:
             if self.level < CHAT_LEVEL:
                 self.level += 1
         else:
             if self.level == PASSWORD_LEVEL:
                 self.level = USERNAME_LEVEL
 
-        self.add_ui_message(parsed_msg, color, keep_color)
+        self.add_ui_message(str(msg_obj), msg_obj.color, msg_obj.keep_color_after_username)
         self.refresh_window()
         
     def listen_for_disconnection(self):
@@ -126,15 +126,19 @@ class ChatUI:
             
             content = f"[{SYSTEM_USER}]{UI_SEP} {DISCONNECTED_TEXT}"
             color = CLIColors.ERROR_COLOR.value
-            keep_color = True
+            keep_color_after_username = True
         
-            self.add_ui_message(content, color, keep_color)
+            self.add_ui_message(content, color, keep_color_after_username)
             self.refresh_window()
 
     def handle_enter(self):
         msg_content: str = self.input_text.strip()
         self.input_text = ""
         self.input_text_ui = ""
+        
+        msg_obj = ClientMessage()
+        msg_obj.username = self.username
+        msg_obj.content = msg_content
 
         if msg_content == "":
             pass
@@ -142,24 +146,24 @@ class ChatUI:
             self.is_exit_triggered = True
         else:
             if self.level != WAITING_LEVEL and not self.disconnected:
-                self.event_handler.trigger_event(SEND_EVENT_NAME, msg_content)
+                self.event_handler.trigger_event(SEND_EVENT_NAME, msg_obj.serialize())
                 content = ""
                 color = 0
-                keep_color = False
+                keep_color_after_username = False
 
                 if self.level == USERNAME_LEVEL:
                     self.username = msg_content
                     self.level += 1
                     content, color = build_username_message(msg_content)
-                    keep_color = True
+                    keep_color_after_username = True
                 elif self.level == PASSWORD_LEVEL:
                     self.password = msg_content
                     content, color = build_password_message(msg_content)
-                    keep_color = True
+                    keep_color_after_username = True
                 elif self.level == CHAT_LEVEL:
                     content, color = build_input_message(msg_content)
 
-                self.add_ui_message(content, color, keep_color)
+                self.add_ui_message(content, color, keep_color_after_username)
 
     def handle_backspace(self):
         if self.input_text != "":

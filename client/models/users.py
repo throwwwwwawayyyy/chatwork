@@ -15,12 +15,17 @@ class User:
         if isinstance(other, User):
             return (self.name != other.name or self.privilege != other.privilege)
         return True
+    
+class Singleton(object):
+    _instances = None
+    
+    def __new__(class_, *args, **kwargs):
+        if not isinstance(class_._instances, class_):
+            class_._instances = object.__new__(class_, *args, **kwargs)
+        return class_._instances
 
-class UserList:
-    user_list: list[User]
-
-    def __init__(self) -> None:
-        self.user_list = []
+class UserList(Singleton):
+    user_list: list[User] = []
 
     def add_user(self, user: User) -> None:
         for _user in self.user_list:
