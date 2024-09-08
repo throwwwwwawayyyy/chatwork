@@ -1,7 +1,8 @@
 import socket
 import threading
+import logging
+import datetime
 import os
-import rsa
 
 from components.event_handler import EventHandler
 from components.encryption_manager import EncryptionManager
@@ -18,12 +19,20 @@ class ClientSocketManager:
     debug: bool
     connected: bool
     is_exit_triggered: bool = False
+    logger: logging.Logger
     
     encryptor: EncryptionManager
 
     def __init__(self, host: str, port: int, event_handler: EventHandler, debug = True) -> None:
         self.host = host
         self.port = port
+        
+        if not os.path.exists("logs/"):
+            os.makedirs("logs/")
+        
+        time_log = datetime.datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
+        logging.basicConfig(filename=f"logs//debug_{time_log}.log", level=logging.INFO, filemode="w+")
+        self.logger = logging.getLogger(__name__)
         
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.settimeout(CONNECTION_TIMEOUT)
@@ -57,6 +66,7 @@ class ClientSocketManager:
         msg = self.encryptor.decrypt(msg)
         decoded_msg = msg.decode()
         if decoded_msg:
+            self.logger.info(f"RECEIVED: [{decoded_msg}]")
             self.event_handler.trigger_event(SHOW_EVENT_NAME, decoded_msg)
         else:
             self.handle_disconnection()
@@ -73,6 +83,7 @@ class ClientSocketManager:
             data_to_send = msg.encode()
             data_to_send = self.encryptor.encrypt(data_to_send)
             self.conn.send(data_to_send)
+            self.logger.info(f"SENT: [{msg}]")
         except ConnectionError:
             self.handle_disconnection()
 

@@ -135,10 +135,7 @@ class ChatUI:
         msg_content: str = self.input_text.strip()
         self.input_text = ""
         self.input_text_ui = ""
-        
-        msg_obj = ClientMessage()
-        msg_obj.username = self.username
-        msg_obj.content = msg_content
+        msg_obj: Message = None
 
         if msg_content == "":
             pass
@@ -146,7 +143,6 @@ class ChatUI:
             self.is_exit_triggered = True
         else:
             if self.level != WAITING_LEVEL and not self.disconnected:
-                self.event_handler.trigger_event(SEND_EVENT_NAME, msg_obj.serialize())
                 content = ""
                 color = 0
                 keep_color_after_username = False
@@ -160,9 +156,17 @@ class ChatUI:
                     self.password = msg_content
                     content, color = build_password_message(msg_content)
                     keep_color_after_username = True
+                    
+                    msg_obj = AuthMessage(self.username, self.password)
                 elif self.level == CHAT_LEVEL:
                     content, color = build_input_message(msg_content)
+                    
+                    msg_obj = ClientMessage()
+                    msg_obj.username = self.username
+                    msg_obj.content = msg_content
 
+                if msg_obj is not None:
+                    self.event_handler.trigger_event(SEND_EVENT_NAME, msg_obj.serialize())
                 self.add_ui_message(content, color, keep_color_after_username)
 
     def handle_backspace(self):

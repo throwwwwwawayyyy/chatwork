@@ -1,6 +1,8 @@
 import rsa
 import socket
 
+import rsa.pkcs1
+
 from constants.encryption import *
 
 class EncryptionManager:

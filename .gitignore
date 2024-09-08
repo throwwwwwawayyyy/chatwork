@@ -165,3 +165,6 @@ cython_debug/
 # test scripts
 server/test/
 client/test/
+
+# debug log files
+logs/

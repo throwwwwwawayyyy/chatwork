@@ -1,9 +1,9 @@
 from dataclasses import dataclass, asdict
 import json
 
-from users import UserList, User
+from models.users import UserList, User
 
-from constants.logic import SYSTEM_USER, Privileges
+from constants.logic import SYSTEM_USER, Privileges, MessageType
 from constants.texts import *
 from constants.ack_codes import ack_to_text, errored_ack_codes
 from constants.colors import CLIColors
@@ -30,7 +30,17 @@ class Message:
     
     def serialize(self):
         result = asdict(self)
-        result["type"] = type(self).__name__
+        match self:
+            case ClientMessage():
+                result["type"] = MessageType.CLIENT.value
+            case AckMessage():
+                result["type"] = MessageType.ACK.value
+            case JoinMessage():
+                result["type"] = MessageType.JOIN.value
+            case LeaveMessage():
+                result["type"] = MessageType.LEAVE.value
+            case AuthMessage():
+                result["type"] = MessageType.AUTH.value
         
         return json.dumps(result)
 
@@ -145,3 +155,8 @@ class LeaveMessage(Message):
         
     def __str__(self) -> str:
         return build_message(SYSTEM_USER, self.username + LEFT_MSG_TEXT)
+    
+@dataclass
+class AuthMessage(Message):
+    username: str
+    password: str
