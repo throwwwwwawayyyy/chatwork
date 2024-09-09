@@ -1,14 +1,15 @@
 from typing import Callable
 from utils.event_handler import EventHandler
-from objects.events import ClientJoinAttemptEvent, ClientJoinEvent, ClientLeaveEvent, MessageReceiveEvent
+from objects.events import ClientJoinAttemptEvent, ClientJoinEvent, ClientLeaveEvent, MessageReceivedEvent
 from objects.messages import JoinMessage, LeaveMessage
 import utils.validators as validators
+import logging
 
 listeners: list[tuple] = []
 
 class ServerHandlers:
-
     def __init__(self) -> None:
+        self.logger = logging.getLogger(__name__)
         for listener in listeners:
             instantiated_listener = self.instantiate_listener(listener[1])
             EventHandler.listen(listener[0], instantiated_listener)
@@ -24,16 +25,16 @@ class ServerHandlers:
             listeners.append((event_type, listener))
         return wrapper
     
-    @_add_handler(MessageReceiveEvent)
-    async def message_receive_handler(self, event: MessageReceiveEvent) -> None:
-        print(event.message, end='\n\n')
+    @_add_handler(MessageReceivedEvent)
+    async def message_received_handler(self, event: MessageReceivedEvent) -> None:
+        self.logger.debug(f"Received message: {event.message}")
         try:
             await self.broadcast(
                 event.message,
                 validators.exclude_client(event.client)
-                )
+            )
         except Exception as e:
-            print(e)
+            self.logger.exception(e)
 
     @_add_handler(ClientJoinAttemptEvent)
     async def client_join_attempt_handler(self, event: ClientJoinAttemptEvent) -> None:
@@ -54,8 +55,7 @@ class ServerHandlers:
 
     @_add_handler(ClientLeaveEvent)
     async def client_leave_handler(self, event: ClientLeaveEvent) -> None:
-        print("Client disconnected")
-        client = event.client
-        self.clients.remove(client)
+        self.logger.debug("Client {event.client.username} disconnected")
+        self.clients.remove(event.client)
         await self.broadcast(LeaveMessage(
-            client.username), validators.exclude_client(event.client))
+            event.client.username), validators.exclude_client(event.client))

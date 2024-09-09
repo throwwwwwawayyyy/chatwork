@@ -1,14 +1,17 @@
-import asyncio
 from managers.client_manager import ClientManager
 from utils.server_handlers import ServerHandlers
 from utils.event_handler import EventHandler
+from utils.constants import State
 from objects.messages import *
 from objects.events import *
+import asyncio
+import logging
 
 
 class ServerManager(EventHandler, ServerHandlers):
     def __init__(self) -> None:
         super().__init__()
+        self.logger = logging.getLogger(__name__)
         self.server: asyncio.Server = None
         self.clients: list[ClientManager] = []
         self.usernames: list[str] = []
@@ -20,7 +23,7 @@ class ServerManager(EventHandler, ServerHandlers):
 
         addresses = ', '.join(str(sock.getsockname())
                           for sock in obj.server.sockets)
-        print(f'Serving on {addresses}')
+        obj.logger.debug(f'Serving on {addresses}')
 
         async with obj.server:
             await obj.server.serve_forever()
@@ -28,9 +31,11 @@ class ServerManager(EventHandler, ServerHandlers):
     async def handle_client(self,
                             reader: asyncio.StreamReader,
                             writer: asyncio.StreamWriter) -> None:
-        client = ClientManager(reader, writer)
+        client = ClientManager(reader, writer, State.AUTH)
         await client.init_keys()
         if await client.process_credentials():
+            await super().fire(
+                ClientJoinEvent(client))
             await client.start_client()
         else:
             client.disconnect()
@@ -38,6 +43,7 @@ class ServerManager(EventHandler, ServerHandlers):
     async def broadcast(self, 
                         message: Message, 
                         *client_validators: tuple[callable]) -> None:
+        self.logger.debug(f"Broadcasting message: {message} to clients: {self.clients}")
         for client in self.clients:
             is_valid = all([validator(client) for validator in client_validators])
             if is_valid:

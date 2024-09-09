@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from objects.messages import Message
 
 @dataclass
-class MessageReceiveEvent:
+class MessageReceivedEvent:
     message: Message
     client: object
 

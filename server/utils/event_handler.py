@@ -1,9 +1,13 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 class EventHandler:
     listeners: dict[object, list] = {}
     
     @staticmethod
     def listen(event_type, listener) -> None:
-        print(f"Listening to: {event_type}")
+        logger.debug(f"Listening to: {event_type}")
         if event_type not in EventHandler.listeners:
             EventHandler.listeners[event_type] = []
         EventHandler.listeners[event_type].append(listener)
@@ -13,4 +17,4 @@ class EventHandler:
             for listener in EventHandler.listeners[type(event)]:
                 await listener(event)
         except Exception as e:
-            print(e)
+            logger.error(e)

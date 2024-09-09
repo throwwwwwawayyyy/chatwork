@@ -1,64 +1,61 @@
 import asyncio
+import logging
 from managers.encryption_manager import EncryptionManager
 from utils.event_handler import EventHandler
-from objects.events import MessageReceiveEvent, ClientJoinEvent, ClientLeaveEvent
-from objects.messages import AckMessage, ClientMessage, Message
+from objects.events import MessageReceivedEvent, ClientJoinEvent, ClientLeaveEvent
+from objects.messages import AckMessage, ClientMessage, Message, AuthMessage
 import utils.constants as constants
 from utils.validators import validate_credentials
 
 class ClientManager(EventHandler):
     def __init__(self,
                  reader: asyncio.StreamReader,
-                 writer: asyncio.StreamWriter) -> None:
+                 writer: asyncio.StreamWriter,
+                 state: constants.State) -> None:
+        self.logger = logging.getLogger(__name__)
         self.reader = reader
         self.writer = writer
+        self.state = state
         self.ip, self.port = writer.get_extra_info('peername')
         self.username = None
         self.privilege = constants.Privileges.DEFAULT.value
         self.encryption_manager = EncryptionManager()
 
-        print(f"Connected from: ({self.ip}, {self.port})")
+        self.logger.debug(f"Connected from: ({self.ip}, {self.port})")
         
     async def init_keys(self):
         await self.encryption_manager.share_keys(self.reader, self.writer)
 
-    async def start_client(self) -> None:
-        print(f"Starting client")
-        await super().fire(
-            ClientJoinEvent(self))
-
+    async def start_message_loop(self):
         while True:
-            content = await self.read_message()
+            client_message: ClientMessage|None = await self.read_message()
             
-            if not content:
-                break
-            
-            message = ClientMessage.from_bytes(content)
-            await super().fire(MessageReceiveEvent(message, self))
+            if not isinstance(client_message, ClientMessage):
+                return
 
-        self.disconnect()
-        return True
+            await super().fire(MessageReceivedEvent(client_message, self))
+
+    async def start_client(self) -> None:
+        self.logger.debug(f"Starting client")
+        await self.start_message_loop()
 
     async def process_credentials(self):
         while True:
-            username = await self.read_message()
-            password = await self.read_message()
+            auth_message: AuthMessage|None = await self.read_message()
             
-            print(username, password)
-            
-            if not (username and password):
+            if not isinstance(auth_message, AuthMessage):
                 return False
 
-            if validate_credentials(username, password):
+            if validate_credentials(auth_message):
                 self.send_message(AckMessage(
-                    constants.AckCodes.CREDENTIALS_ACCEPTED))
+                    constants.AckCodes.CREDENTIALS_ACCEPTED.value))
                 break
             else:
                 self.send_message(AckMessage(
-                    constants.AckCodes.CREDENTIALS_DENIED))
+                    constants.AckCodes.CREDENTIALS_DENIED.value))
                 
-        self.send_message(AckMessage(constants.AckCodes.CLIENT_AUTHORIZED))
-        self.username = username.decode('utf-8')
+        self.send_message(AckMessage(constants.AckCodes.CLIENT_AUTHORIZED.value))
+        self.username = auth_message.username
         
         return True
 
@@ -70,13 +67,11 @@ class ClientManager(EventHandler):
         encrypted_raw_message = self.encryption_manager.encrypt(raw_message)
         self.writer.write(encrypted_raw_message)
         
-    async def read_message(self):
+    async def read_message(self) -> Message:
         try:
             encrypted_raw_message = await self.reader.read(200)
-            if not encrypted_raw_message:
-                await super().fire(ClientLeaveEvent(self))
-                return
             raw_message = self.encryption_manager.decrypt(encrypted_raw_message)
-            return raw_message
+            return Message.from_bytes(raw_message)
         except ConnectionResetError:
             await super().fire(ClientLeaveEvent(self))
+            return None
