@@ -17,6 +17,7 @@ class MessageType(Enum):
     JOIN = 3
     LEAVE = 4
     AUTH = 5
+    COMMAND = 6
     
     
 class Privileges(Enum):
@@ -31,5 +32,5 @@ class State(Enum):
 
 SEP = "&@^"
 
-RSA_KEY_DEFAULT_SIZE = 1024
+RSA_KEY_DEFAULT_SIZE = 2048
 RSA_KEY_END_HEADER = b"\n-----END RSA PUBLIC KEY-----\n"

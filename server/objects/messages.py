@@ -96,6 +96,20 @@ class LeaveMessage(Message):
         return LeaveMessage(username)
     
 
+@dataclass
+class CommandMessage(Message):
+    msg_type = MessageType.COMMAND.value
+    cmd_name: str
+    args: list
+
+    @staticmethod
+    def from_bytes(encoded_msg: bytes) -> None:
+        message_dict = json.loads(encoded_msg.decode("utf-8"))
+        cmd_name = message_dict["cmd_name"]
+        args = message_dict["args"]
+        return CommandMessage(cmd_name, args)
+    
+
 class FallbackMessage(Message):
     msg_type = MessageType.FALLBACK.value
     

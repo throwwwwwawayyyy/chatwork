@@ -1,4 +1,4 @@
-# from dashboard import dashboard
+from dashboard import dashboard
 from managers.server_manager import ServerManager
 from managers.config_manager import NetworkConfig
 import asyncio
@@ -14,5 +14,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    # dashboard.start_dashboard()
+    dashboard.start_dashboard()
     asyncio.run(main())

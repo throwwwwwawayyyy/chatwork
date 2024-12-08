@@ -1,22 +1,31 @@
 from dataclasses import dataclass
 from objects.messages import Message
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from managers.client_manager import ClientManager
 
 @dataclass
 class MessageReceivedEvent:
     message: Message
-    client: object
+    client: "ClientManager"
 
 
 @dataclass
 class ClientJoinAttemptEvent:
-    client: object
+    client: "ClientManager"
 
 
 @dataclass
 class ClientJoinEvent:
-    client: object
+    client: "ClientManager"
 
 
 @dataclass
 class ClientLeaveEvent:
-    client: object
+    client: "ClientManager"
+    
+
+@dataclass
+class ServerStopEvent:
+    pass

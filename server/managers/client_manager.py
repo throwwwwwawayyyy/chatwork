@@ -1,17 +1,17 @@
 import asyncio
 import logging
 from managers.encryption_manager import EncryptionManager
-from utils.event_handler import EventHandler
+from managers.event_manager import EventManager
 from objects.events import MessageReceivedEvent, ClientJoinEvent, ClientLeaveEvent
 from objects.messages import AckMessage, ClientMessage, Message, AuthMessage
 import utils.constants as constants
 from utils.validators import validate_credentials
 
-class ClientManager(EventHandler):
+class ClientManager(EventManager):
     def __init__(self,
-                 reader: asyncio.StreamReader,
-                 writer: asyncio.StreamWriter,
-                 state: constants.State) -> None:
+                reader: asyncio.StreamReader,
+                writer: asyncio.StreamWriter,
+                state: constants.State) -> None:
         self.logger = logging.getLogger(__name__)
         self.reader = reader
         self.writer = writer
@@ -20,6 +20,7 @@ class ClientManager(EventHandler):
         self.username = None
         self.privilege = constants.Privileges.DEFAULT.value
         self.encryption_manager = EncryptionManager()
+        self.is_stopped = False
 
         self.logger.debug(f"Connected from: ({self.ip}, {self.port})")
         
@@ -30,8 +31,8 @@ class ClientManager(EventHandler):
         while True:
             client_message: ClientMessage|None = await self.read_message()
             
-            if not isinstance(client_message, ClientMessage):
-                return
+            if not isinstance(client_message, ClientMessage) or self.is_stopped:
+                break
 
             await super().fire(MessageReceivedEvent(client_message, self))
 
@@ -61,6 +62,7 @@ class ClientManager(EventHandler):
 
     def disconnect(self) -> None:
         self.writer.close()
+        self.is_stopped = True
         
     def send_message(self, message: Message):
         raw_message = message.serialize()
@@ -69,7 +71,7 @@ class ClientManager(EventHandler):
         
     async def read_message(self) -> Message:
         try:
-            encrypted_raw_message = await self.reader.read(200)
+            encrypted_raw_message = await self.reader.read(2048)
             raw_message = self.encryption_manager.decrypt(encrypted_raw_message)
             return Message.from_bytes(raw_message)
         except ConnectionResetError:
