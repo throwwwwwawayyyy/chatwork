@@ -19,3 +19,6 @@ JOINED_MSG_TEXT = " joined!"
 LEFT_MSG_TEXT = " left!"
 USERNAME_MSG_TEXT = "username "
 PASSWORD_MSG_TEXT = "password "
+
+WELCOME_APP_TITLE = "Welcome to ChatWork - by Product Trio"
+HOME_APP_TITLE = "Chatwork"

@@ -27,11 +27,11 @@ class ClientSocketManager:
         self.host = host
         self.port = port
         
-        if not os.path.exists("logs/"):
-            os.makedirs("logs/")
+        if not os.path.exists("client/logs/"):
+            os.makedirs("client/logs/")
         
         time_log = datetime.datetime.now().strftime("%m-%d-%Y_%H-%M-%S")
-        logging.basicConfig(filename=f"logs//debug_{time_log}.log", level=logging.INFO, filemode="w+")
+        logging.basicConfig(filename=f"client//logs//debug_{time_log}.log", level=logging.INFO, filemode="w+")
         self.logger = logging.getLogger(__name__)
         
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -64,12 +64,14 @@ class ClientSocketManager:
 
     def handle_message(self, msg: bytes):
         msg = self.encryptor.decrypt(msg)
-        decoded_msg = msg.decode()
-        if decoded_msg:
-            self.logger.info(f"RECEIVED: [{decoded_msg}]")
-            self.event_handler.trigger_event(SHOW_EVENT_NAME, decoded_msg)
-        else:
-            self.handle_disconnection()
+        
+        if msg:
+            decoded_msg = msg.decode()
+            if decoded_msg:
+                self.logger.info(f"RECEIVED: [{decoded_msg}]")
+                self.event_handler.trigger_event(SHOW_EVENT_NAME, decoded_msg)
+            else:
+                self.handle_disconnection()
         
     def handle_disconnection(self):
         self.event_handler.trigger_event(DISCONNECTED_EVENT_NAME)

@@ -8,6 +8,8 @@ from models.ui_message import UIMessage
 from utils.message_parser import MessageTypeParser
 from utils.build_message import build_input_message, build_username_message, build_password_message
 from utils.colors_config import colors_config
+from utils.terminal_title import set_terminal_title, clear_terminal_title
+from utils.string_utils import handle_display_string
 
 from constants.texts import *
 from constants.logic import *
@@ -24,6 +26,7 @@ class ChatUI:
     input_text_ui: str = ""
     
     level: int = USERNAME_LEVEL
+    changed_title: bool = False
     username: str
     password: str
     
@@ -46,6 +49,7 @@ class ChatUI:
         self.stdscr.refresh()
 
         colors_config()
+        set_terminal_title(WELCOME_APP_TITLE)
 
         self.messages_win = curses.newwin(curses.LINES - 2, curses.COLS, 0, 0)
         self.input_win = curses.newwin(1, curses.COLS, curses.LINES - 1, 0)
@@ -69,11 +73,19 @@ class ChatUI:
             input_hint = WAITING_HINT_TEXT
         else:
             input_hint = INPUT_HINT_TEXT
+            
+            if not self.changed_title:
+                set_terminal_title(f"{HOME_APP_TITLE} - {self.username}")
+                self.changed_title = True
 
         curses.resize_term(curses.LINES, curses.COLS)
+        
+        input_bar_text = handle_display_string(self.input_text_ui)
 
         self.input_win.clear()
-        self.input_win.addstr(0, 0, input_hint + self.input_text_ui, curses.color_pair(CLIColors.INPUT_COLOR.value))
+        for i, chr in enumerate(input_hint + input_bar_text):
+            if i < curses.COLS - 1:
+                self.input_win.addch(0, i, chr, curses.color_pair(CLIColors.INPUT_COLOR.value))
         self.input_win.refresh()
 
         self.messages_win.clear()
@@ -82,12 +94,13 @@ class ChatUI:
         s = self.curr_pos
 
         for i, ui_message in enumerate(self.ui_messages[s:]):
-            for j, elm in enumerate(ui_message.content):
+            display_content = handle_display_string(ui_message.content)
+            for j, elm in enumerate(display_content):
                 color = ui_message.color
                 if j > ui_message.content.find(UI_SEP) and not ui_message.keep_color_after_username:
                     color = CLIColors.DEFAULT_COLOR.value
                 
-                if i < self.msg_size:
+                if i < self.msg_size and i < curses.COLS - 1:
                     self.messages_win.addch(i + 1, j + 2, elm, curses.color_pair(color))
 
         self.messages_win.refresh()
@@ -158,6 +171,7 @@ class ChatUI:
                     keep_color_after_username = True
                     
                     msg_obj = AuthMessage(self.username, self.password)
+                    msg_obj.handle()
                 elif self.level == CHAT_LEVEL:
                     content, color = build_input_message(msg_content)
                     
@@ -207,3 +221,5 @@ class ChatUI:
                     self.handle_down()
                 else:
                     self.handle_key(key)
+                    
+        clear_terminal_title()

@@ -28,12 +28,16 @@ class EncryptionManager:
         # Build the public key from the PEM raw data
         self.public_key = rsa.PublicKey.load_pkcs1(public_key_recv_raw)
         
-    def encrypt(self, msg: bytes) -> bytes:
+    def encrypt(self, msg: bytes) -> bytes | None:
         if self.public_key:
             return rsa.encrypt(msg, self.public_key)
         return None
     
-    def decrypt(self, msg: bytes) -> bytes:
+    def decrypt(self, msg: bytes) -> bytes | None:
         if self.private_key:
-            return rsa.decrypt(msg, self.private_key)
+            try:
+                decrypted_msg = rsa.decrypt(msg, self.private_key)
+                return decrypted_msg
+            except:
+                pass
         return None

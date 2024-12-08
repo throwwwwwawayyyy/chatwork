@@ -9,3 +9,4 @@ def colors_config() -> None:
     curses.init_pair(CLIColors.SYSTEM_MESSAGE_COLOR.value, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(CLIColors.YOUR_MESSAGE_COLOR.value, curses.COLOR_YELLOW, curses.COLOR_BLACK)
     curses.init_pair(CLIColors.ERROR_COLOR.value, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(CLIColors.JOIN_LEFT_COLOR.value, curses.COLOR_YELLOW, curses.COLOR_BLACK)

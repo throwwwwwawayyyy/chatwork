@@ -65,7 +65,8 @@ class ClientMessage(Message):
         user_list = UserList()
         
         # Check if the user is admin
-        if user_list.get_user(self.username).privilege == Privileges.ADMIN.value:
+        current_user = user_list.get_user(self.username)
+        if current_user and current_user.privilege == Privileges.ADMIN.value:
             self.color = CLIColors.ADMIN_MESSAGE_COLOR.value
 
     def __str__(self) -> str:
@@ -160,3 +161,7 @@ class LeaveMessage(Message):
 class AuthMessage(Message):
     username: str
     password: str
+    
+    def handle(self) -> None:
+        user_list = UserList()
+        user_list.add_user(User(self.username, 0))
