@@ -10,11 +10,14 @@ class AckCodes(Enum):
 
 
 class MessageType(Enum):
+    FALLBACK = -1
     ACK = 0
     CLIENT = 1
     SERVER = 2
     JOIN = 3
     LEAVE = 4
+    AUTH = 5
+    COMMAND = 6
     
     
 class Privileges(Enum):
@@ -22,7 +25,12 @@ class Privileges(Enum):
     ADMIN = 1
 
 
+class State(Enum):
+    AUTH = 0
+    CONNECTED = 1
+
+
 SEP = "&@^"
 
-RSA_KEY_DEFAULT_SIZE = 1024
+RSA_KEY_DEFAULT_SIZE = 2048
 RSA_KEY_END_HEADER = b"\n-----END RSA PUBLIC KEY-----\n"
