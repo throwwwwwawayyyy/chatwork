@@ -1,10 +1,17 @@
 from constants.logic import PASSWORD_DISPLAY_CHARACTER
 from constants.logic import YOUR_USER, SYSTEM_USER, UI_SEP
+from constants.logic import Privileges
 from constants.texts import USERNAME_MSG_TEXT, PASSWORD_MSG_TEXT
 from constants.colors import CLIColors
 
-def build_message(user:str, content:str) -> str:
-    return f"[{user}]{UI_SEP} {content}"
+def build_message(user:str, content:str, privilege:int = 0) -> str:
+    priv_sign = ""
+    if privilege == Privileges.MOD.value:
+        priv_sign = " $"
+    elif privilege == Privileges.ADMIN.value:
+        priv_sign = " #"
+    
+    return f"[{user}{priv_sign}]{UI_SEP} {content}"
 
 def password_display(password: str) -> str:
     disp = ""
@@ -13,8 +20,8 @@ def password_display(password: str) -> str:
     
     return disp
 
-def build_input_message(content: str) -> tuple[str, int]:
-    msg = build_message(YOUR_USER, content)
+def build_input_message(content: str, privilege:int = 0) -> tuple[str, int]:
+    msg = build_message(YOUR_USER, content, privilege)
     color = CLIColors.YOUR_MESSAGE_COLOR.value
 
     return msg, color

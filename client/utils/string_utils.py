@@ -1,3 +1,5 @@
+import random
+
 def contains_hebrew(txt: str) -> list[tuple[int, int]]:
     hebrew_alphabet = [chr(code) for code in range(0x05D0, 0x05EA + 1)]
     hebrew_alphabet.extend(['ך', 'ם', 'ן', 'ף', 'ץ'])
@@ -45,3 +47,7 @@ def handle_display_string(txt: str) -> str:
         txt = reverse_substring(txt, idx, size)
     
     return txt
+
+def generate_random_unk_username() -> str:
+    id = random.randint(0, 100000)
+    return "unk" + str(id)

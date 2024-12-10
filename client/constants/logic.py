@@ -7,10 +7,13 @@ class MessageType(Enum):
     JOIN = 3
     LEAVE = 4
     AUTH = 5
+    COMMAND = 6
+    DISCONNECT = 7
 
 class Privileges(Enum):
     DEFAULT = 0
-    ADMIN = 1
+    MOD = 1
+    ADMIN = 2
 
 SYSTEM_USER = "System"
 YOUR_USER = "You"
@@ -26,3 +29,5 @@ UI_SEP = ":"
 EXIT_MESSAGE = "exit"
 
 PASSWORD_DISPLAY_CHARACTER = "*"
+
+MAX_ALLOWED_MSG_LENGTH = 150

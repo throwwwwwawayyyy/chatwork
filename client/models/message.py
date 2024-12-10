@@ -3,12 +3,13 @@ import json
 
 from models.users import UserList, User
 
-from constants.logic import SYSTEM_USER, Privileges, MessageType
+from constants.logic import SYSTEM_USER, MessageType
 from constants.texts import *
 from constants.ack_codes import ack_to_text, errored_ack_codes
 from constants.colors import CLIColors
 
 from utils.build_message import build_message
+from utils.string_utils import generate_random_unk_username
 
 class Message:
     type: int
@@ -41,6 +42,8 @@ class Message:
                 result["type"] = MessageType.LEAVE.value
             case AuthMessage():
                 result["type"] = MessageType.AUTH.value
+            case DisconnectMessage():
+                result["type"] = MessageType.DISCONNECT.value
         
         return json.dumps(result)
 
@@ -51,6 +54,7 @@ class Message:
 class ClientMessage(Message):
     username: str
     content: str
+    privilege: int = 0
 
     def __init__(self) -> None:
         super().__init__()
@@ -60,17 +64,10 @@ class ClientMessage(Message):
         
         self.username = json_msg['username']
         self.content = json_msg['content']
-        
-    def handle(self) -> None:
-        user_list = UserList()
-        
-        # Check if the user is admin
-        current_user = user_list.get_user(self.username)
-        if current_user and current_user.privilege == Privileges.ADMIN.value:
-            self.color = CLIColors.ADMIN_MESSAGE_COLOR.value
+        self.privilege = json_msg['privilege']
 
     def __str__(self) -> str:
-        return build_message(self.username, self.content)
+        return build_message(self.username, self.content, self.privilege)
 
 @dataclass
 class AckMessage(Message):
@@ -109,7 +106,7 @@ class JoinMessage(Message):
     def deserialize(self, json_msg: dict) -> None:
         super().deserialize(json_msg)
         
-        self.username = json_msg['username']
+        self.username = json_msg['username'] or generate_random_unk_username()
         self.privilege = int(json_msg['privilege'])
 
     def handle(self) -> None:
@@ -165,3 +162,17 @@ class AuthMessage(Message):
     def handle(self) -> None:
         user_list = UserList()
         user_list.add_user(User(self.username, 0))
+
+@dataclass        
+class DisconnectMessage(Message):
+    def __init__(self):
+        super().__init__()
+        
+        self.color = CLIColors.ERROR_COLOR.value
+        self.keep_color_after_username = True
+    
+    def handle(self):
+        return super().handle()
+    
+    def __str__(self):
+        return build_message(SYSTEM_USER, DISCONNECTED_TEXT)

@@ -17,6 +17,8 @@ class MessageTypeParser:
             msg_obj = JoinMessage()
         elif json_msg_obj['type'] == MessageType.LEAVE.value:
             msg_obj = LeaveMessage()
+        elif json_msg_obj['type'] == MessageType.DISCONNECT.value:
+            msg_obj = DisconnectMessage()
         else:
             msg_obj = InvalidMessage()
         

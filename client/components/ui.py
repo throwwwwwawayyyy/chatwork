@@ -134,15 +134,7 @@ class ChatUI:
         self.event_handler.add_listener(DISCONNECTED_EVENT_NAME, lambda: self.handle_disconnection())
         
     def handle_disconnection(self):
-        if not self.disconnected:
-            self.disconnected = True
-            
-            content = f"[{SYSTEM_USER}]{UI_SEP} {DISCONNECTED_TEXT}"
-            color = CLIColors.ERROR_COLOR.value
-            keep_color_after_username = True
-        
-            self.add_ui_message(content, color, keep_color_after_username)
-            self.refresh_window()
+        self.disconnected = True
 
     def handle_enter(self):
         msg_content: str = self.input_text.strip()
