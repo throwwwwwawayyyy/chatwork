@@ -51,3 +51,6 @@ def handle_display_string(txt: str) -> str:
 def generate_random_unk_username() -> str:
     id = random.randint(0, 100000)
     return "unk" + str(id)
+
+def pad_header(header: str) -> str:
+    return " " * len(header)

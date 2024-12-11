@@ -9,6 +9,8 @@ class AckCodes(Enum):
     CLIENT_DENIED = 4
     CLIENT_AUTHORIZED = 5
     ERROR = 6
+    COMMAND_FAILED = 7
+    COMMAND_SUCCESS = 8
 
 errored_ack_codes = [AckCodes.CLIENT_DENIED.value, 
                      AckCodes.CREDENTIALS_DENIED.value, 
@@ -22,5 +24,6 @@ ack_to_text = {
     AckCodes.WHITELIST_ON.value: WHITELIST_ON_TEXT,
     AckCodes.CLIENT_DENIED.value: CLIENT_DENIED_TEXT,
     AckCodes.CLIENT_AUTHORIZED.value: CLIENT_AUTHORIZED_TEXT,
-    AckCodes.ERROR.value: ERROR_TEXT
+    AckCodes.ERROR.value: ERROR_TEXT,
+    AckCodes.COMMAND_FAILED.value: COMMAND_FAILED_TEXT
 }

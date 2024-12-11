@@ -3,7 +3,7 @@ import json
 
 from models.users import UserList, User
 
-from constants.logic import SYSTEM_USER, MessageType
+from constants.logic import SYSTEM_USER, YOUR_USER, MessageType
 from constants.texts import *
 from constants.ack_codes import ack_to_text, errored_ack_codes
 from constants.colors import CLIColors
@@ -44,10 +44,12 @@ class Message:
                 result["type"] = MessageType.AUTH.value
             case DisconnectMessage():
                 result["type"] = MessageType.DISCONNECT.value
+            case CommandMessage():
+                result["type"] = MessageType.COMMAND.value
         
         return json.dumps(result)
 
-    def __str__(self) -> str:
+    def display_list(self) -> list[tuple[str, str]]:
         return None
 
 @dataclass
@@ -66,8 +68,11 @@ class ClientMessage(Message):
         self.content = json_msg['content']
         self.privilege = json_msg['privilege']
 
-    def __str__(self) -> str:
-        return build_message(self.username, self.content, self.privilege)
+    def display_list(self) -> list[tuple[str, str]]:
+        rtn = []
+        for line in self.content.split("\n"):
+            rtn.append(build_message(self.username, line, self.privilege))
+        return rtn
 
 @dataclass
 class AckMessage(Message):
@@ -89,8 +94,11 @@ class AckMessage(Message):
             self.color = CLIColors.SYSTEM_MESSAGE_COLOR.value
             self.keep_color_after_username = True
 
-    def __str__(self) -> str:
-        return build_message(SYSTEM_USER, ack_to_text[self.code])
+    def display_list(self) -> list[tuple[str, str]]:
+        if self.code in ack_to_text.keys():
+            return [build_message(SYSTEM_USER, ack_to_text[self.code])]
+        else:
+            return []
 
 @dataclass
 class JoinMessage(Message):
@@ -115,8 +123,8 @@ class JoinMessage(Message):
         # Register user to userlist
         user_list.add_user(User(self.username, self.privilege))
     
-    def __str__(self) -> str:
-        return build_message(SYSTEM_USER, self.username + JOINED_MSG_TEXT)
+    def display_list(self) -> list[tuple[str, str]]:
+        return [build_message(SYSTEM_USER, self.username + JOINED_MSG_TEXT)]
 
 @dataclass
 class InvalidMessage(Message):
@@ -127,8 +135,8 @@ class InvalidMessage(Message):
         self.color = CLIColors.ERROR_COLOR.value
         self.keep_color_after_username = True
         
-    def __str__(self) -> str:
-        return build_message(SYSTEM_USER, INVALID_MESSAGE_TEXT)
+    def display_list(self) -> list[tuple[str, str]]:
+        return [build_message(SYSTEM_USER, INVALID_MESSAGE_TEXT)]
 
 @dataclass 
 class LeaveMessage(Message):
@@ -151,8 +159,8 @@ class LeaveMessage(Message):
         # Delete user from userlist
         user_list.del_user(self.username)
         
-    def __str__(self) -> str:
-        return build_message(SYSTEM_USER, self.username + LEFT_MSG_TEXT)
+    def display_list(self) -> list[tuple[str, str]]:
+        return [build_message(SYSTEM_USER, self.username + LEFT_MSG_TEXT)]
     
 @dataclass
 class AuthMessage(Message):
@@ -174,5 +182,33 @@ class DisconnectMessage(Message):
     def handle(self):
         return super().handle()
     
-    def __str__(self):
-        return build_message(SYSTEM_USER, DISCONNECTED_TEXT)
+    def display_list(self) -> list[tuple[str, str]]:
+        return [build_message(SYSTEM_USER, DISCONNECTED_TEXT)]
+   
+@dataclass 
+class CommandMessage(Message):
+    cmd_name: str
+    args: list
+    
+    def __init__(self):
+        super().__init__()
+        
+    def display_list(self) -> list[tuple[str, str]]:
+        
+        return [build_message(YOUR_USER, f"Activated '{self.cmd_name}' with args={self.args}")]
+    
+
+class SystemMessage(Message):
+    content: str
+    
+    def deserialize(self, json_msg):
+        super().deserialize(json_msg)
+        
+        self.content = json_msg["content"]
+    
+    def display_list(self):
+        rtn = []
+        
+        for line in self.content.split("\n"):
+            rtn.append(build_message(SYSTEM_USER, line))
+        return rtn

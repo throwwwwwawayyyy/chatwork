@@ -9,11 +9,13 @@ class MessageType(Enum):
     AUTH = 5
     COMMAND = 6
     DISCONNECT = 7
+    SYSTEM = 8
 
 class Privileges(Enum):
     DEFAULT = 0
     MOD = 1
     ADMIN = 2
+    ROOT = 3
 
 SYSTEM_USER = "System"
 YOUR_USER = "You"
@@ -26,7 +28,10 @@ CHAT_LEVEL = 3
 SEP = "&@^"
 UI_SEP = ":"
 
-EXIT_MESSAGE = "exit"
+COMMAND_PREFIX = "/"
+COMMAND_PREFIX_INDEX = 0
+
+EXIT_MESSAGE = f"{COMMAND_PREFIX}exit"
 
 PASSWORD_DISPLAY_CHARACTER = "*"
 

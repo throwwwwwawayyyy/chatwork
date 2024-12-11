@@ -5,11 +5,11 @@ from components.event_handler import EventHandler
 from models.message import *
 from models.ui_message import UIMessage
 
-from utils.message_parser import MessageTypeParser
+from utils.message_parser import MessageParser
 from utils.build_message import build_input_message, build_username_message, build_password_message
 from utils.colors_config import colors_config
 from utils.terminal_title import set_terminal_title, clear_terminal_title
-from utils.string_utils import handle_display_string
+from utils.string_utils import handle_display_string, pad_header
 
 from constants.texts import *
 from constants.logic import *
@@ -19,16 +19,14 @@ from constants.colors import CLIColors
 
 class ChatUI:
     event_handler: EventHandler
+    parser: MessageParser
     
     ui_messages: list[UIMessage] = []
     
     input_text: str = ""
     input_text_ui: str = ""
     
-    level: int = USERNAME_LEVEL
     changed_title: bool = False
-    username: str
-    password: str
     
     start_pos: int = 0
     curr_pos: int = 0
@@ -40,6 +38,7 @@ class ChatUI:
     def __init__(self, stdscr, event_handler: EventHandler) -> None:
         self.stdscr = stdscr
         self.event_handler = event_handler
+        self.parser = MessageParser()
         
     def __enter__(self):
         curses.curs_set(0)
@@ -65,17 +64,17 @@ class ChatUI:
     def refresh_window(self) -> None:
         input_hint: str
 
-        if self.level == PASSWORD_LEVEL:
+        if self.parser.get_level() == PASSWORD_LEVEL:
             input_hint = PASSWORD_HINT_TEXT
-        elif self.level == USERNAME_LEVEL:
+        elif self.parser.get_level() == USERNAME_LEVEL:
             input_hint = USERNAME_HINT_TEXT
-        elif self.level == WAITING_LEVEL:
+        elif self.parser.get_level() == WAITING_LEVEL:
             input_hint = WAITING_HINT_TEXT
         else:
             input_hint = INPUT_HINT_TEXT
             
             if not self.changed_title:
-                set_terminal_title(f"{HOME_APP_TITLE} - {self.username}")
+                set_terminal_title(f"{HOME_APP_TITLE} - {self.parser.get_username()}")
                 self.changed_title = True
 
         curses.resize_term(curses.LINES, curses.COLS)
@@ -93,8 +92,16 @@ class ChatUI:
         
         s = self.curr_pos
 
+        current_header = ""
         for i, ui_message in enumerate(self.ui_messages[s:]):
-            display_content = handle_display_string(ui_message.content)
+            header = ""
+            if ui_message.header != current_header:
+                current_header = ui_message.header
+                header = ui_message.header
+            else:
+                header = pad_header(ui_message.header)
+            
+            display_content = header + " " + handle_display_string(ui_message.content)
             for j, elm in enumerate(display_content):
                 color = ui_message.color
                 if j > ui_message.content.find(UI_SEP) and not ui_message.keep_color_after_username:
@@ -105,8 +112,7 @@ class ChatUI:
 
         self.messages_win.refresh()
         
-    def add_ui_message(self, content:str, color:int, keep_color_after_username:bool):
-        ui_msg = UIMessage(content=content, color=color, keep_color_after_username=keep_color_after_username)
+    def add_ui_message(self, ui_msg: UIMessage):
         self.ui_messages.append(ui_msg)
         
         if len(self.ui_messages) > self.msg_size:
@@ -118,16 +124,17 @@ class ChatUI:
         self.event_handler.add_listener(SHOW_EVENT_NAME, lambda msg: self.handle_msg(msg))
 
     def handle_msg(self, msg_to_parse: str):
-        msg_obj = MessageTypeParser.parse(msg_to_parse)
+        msg_obj = self.parser.parse_from_server(msg_to_parse)
 
         if not msg_obj.error:
-            if self.level < CHAT_LEVEL:
-                self.level += 1
+            if self.parser.get_level() < CHAT_LEVEL:
+                self.parser.increment_level()
         else:
-            if self.level == PASSWORD_LEVEL:
-                self.level = USERNAME_LEVEL
+            if self.parser.get_level() == PASSWORD_LEVEL:
+                self.parser.set_level_default()
 
-        self.add_ui_message(str(msg_obj), msg_obj.color, msg_obj.keep_color_after_username)
+        for line in msg_obj.display_list():
+            self.add_ui_message(UIMessage(line[0], line[1], msg_obj.color, msg_obj.keep_color_after_username))
         self.refresh_window()
         
     def listen_for_disconnection(self):
@@ -140,40 +147,19 @@ class ChatUI:
         msg_content: str = self.input_text.strip()
         self.input_text = ""
         self.input_text_ui = ""
-        msg_obj: Message = None
 
         if msg_content == "":
             pass
         elif msg_content == EXIT_MESSAGE:
             self.is_exit_triggered = True
-        else:
-            if self.level != WAITING_LEVEL and not self.disconnected:
-                content = ""
-                color = 0
-                keep_color_after_username = False
-
-                if self.level == USERNAME_LEVEL:
-                    self.username = msg_content
-                    self.level += 1
-                    content, color = build_username_message(msg_content)
-                    keep_color_after_username = True
-                elif self.level == PASSWORD_LEVEL:
-                    self.password = msg_content
-                    content, color = build_password_message(msg_content)
-                    keep_color_after_username = True
-                    
-                    msg_obj = AuthMessage(self.username, self.password)
-                    msg_obj.handle()
-                elif self.level == CHAT_LEVEL:
-                    content, color = build_input_message(msg_content)
-                    
-                    msg_obj = ClientMessage()
-                    msg_obj.username = self.username
-                    msg_obj.content = msg_content
+        elif self.parser.get_level() != WAITING_LEVEL and not self.disconnected:
+                msg_obj, ui_msg_obj = self.parser.parse_from_client(msg_content)
 
                 if msg_obj is not None:
+                    msg_obj.handle()
                     self.event_handler.trigger_event(SEND_EVENT_NAME, msg_obj.serialize())
-                self.add_ui_message(content, color, keep_color_after_username)
+                    
+                self.add_ui_message(ui_msg_obj)
 
     def handle_backspace(self):
         if self.input_text != "":
@@ -189,7 +175,7 @@ class ChatUI:
     def handle_key(self, key: int) -> str:
         self.input_text += chr(key)
         
-        if self.level == PASSWORD_LEVEL:
+        if self.parser.get_level() == PASSWORD_LEVEL:
             self.input_text_ui += PASSWORD_DISPLAY_CHARACTER
         else:
             self.input_text_ui += chr(key)
