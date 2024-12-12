@@ -11,9 +11,9 @@ class AckCodes(Enum):
     ERROR = 6
 
 errored_ack_codes = [AckCodes.CLIENT_DENIED.value, 
-                     AckCodes.CREDENTIALS_DENIED.value, 
-                     AckCodes.WHITELIST_OFF.value, 
-                     AckCodes.ERROR.value]
+                    AckCodes.CREDENTIALS_DENIED.value, 
+                    AckCodes.WHITELIST_OFF.value, 
+                    AckCodes.ERROR.value]
 
 ack_to_text = {
     AckCodes.CREDENTIALS_DENIED.value: CREDENTIALS_DENIED_TEXT,

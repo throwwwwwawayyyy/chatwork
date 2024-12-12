@@ -1,6 +1,6 @@
 from dashboard import dashboard
 from managers.server_manager import ServerManager
-from managers.config_manager import NetworkConfig
+from utils.config import NetworkConfig
 import asyncio
 import logging
 import datetime

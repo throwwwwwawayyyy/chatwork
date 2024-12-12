@@ -1,0 +1,2 @@
+rsa_key_default_size: 2048
+rsa_key_end_header: "\n-----END RSA PUBLIC KEY-----\n"

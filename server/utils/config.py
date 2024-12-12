@@ -22,3 +22,16 @@ class NetworkConfig(Config):
     @property
     def port(self) -> int:
         return self.get_property('port')
+
+
+class EncryptionConfig(Config):
+    def __init__(self) -> None:
+        super().__init__("encryption_config.yml")
+    
+    @property
+    def rsa_key_default_size(self) -> int:
+        return self.get_property('rsa_key_default_size')
+
+    @property
+    def rsa_key_end_header(self) -> str:
+        return self.get_property('rsa_key_end_header')

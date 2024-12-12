@@ -22,7 +22,7 @@ class ClientJoinEvent:
 
 
 @dataclass
-class ClientLeaveEvent:
+class ClientDisconnectEvent:
     client: "ClientManager"
     
 
