@@ -46,8 +46,10 @@ class ClientSocketManager:
             self.conn.connect((self.host, self.port))
             self.conn.settimeout(None)
             
+            self.debug_print(AUTHENTICATING_DEBUG_MSG)
             self.encryptor.share_keys(self.conn)
             
+            self.debug_print(LAUNCHING_THREADS_DEBUG_MSG)
             self.listen_for_input()
             self.listen_for_exit()
             self.serverInputThread = threading.Thread(target=self.listen_to_messages)

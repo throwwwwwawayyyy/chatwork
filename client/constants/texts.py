@@ -1,4 +1,4 @@
-from constants.logic import EXIT_MESSAGE
+from constants.logic import EXIT_MESSAGE, COMMAND_PREFIX
 
 INPUT_HINT_TEXT = f"Type a message (or type '{EXIT_MESSAGE}' to exit): "
 PASSWORD_HINT_TEXT = f"Type a password (or type '{EXIT_MESSAGE}' to exit): "
@@ -14,6 +14,7 @@ CLIENT_AUTHORIZED_TEXT = "Client authorised."
 ERROR_TEXT = "Something went wrong!"
 INVALID_MESSAGE_TEXT = "Invalid Message."
 DISCONNECTED_TEXT = "Connection Ended!"
+COMMAND_FAILED_TEXT = f"Invalid Command Entered (type {COMMAND_PREFIX}help for help)!"
 
 JOINED_MSG_TEXT = " joined!"
 LEFT_MSG_TEXT = " left!"
