@@ -6,10 +6,9 @@ class EncryptionManager:
     public_key: rsa.PublicKey
     private_key: rsa.PrivateKey
     public_key_send: rsa.PublicKey
-    config = EncryptionConfig()
     
-    def __init__(self, key_size: int = config.rsa_key_default_size) -> None:
-        self.public_key_send, self.private_key = rsa.newkeys(2048)
+    def __init__(self, key_size) -> None:
+        self.public_key_send, self.private_key = rsa.newkeys(key_size)
         self.public_key = None
         
     async def share_keys(self, reader: StreamReader, writer: StreamWriter) -> None:

@@ -5,24 +5,30 @@ from objects.events import ServerStopEvent
 from objects.messages import SystemMessage
 from utils.enums import Privilege
 from managers.client_manager import ClientManager
+from utils import utils
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from managers.server_manager import ServerManager
 
-class CommandHandler(CommandManager, EventManager):
-    def __init__(self) -> None:
-        super().__init__()
-        super().register_command("help", self.help_command, Privilege.DEFAULT)
-        super().register_command("stop", self.stop_command, Privilege.ROOT)
-        super().register_command("announce", self.announce_command, Privilege.ROOT)
-        super().register_command("say", self.say_command, Privilege.ROOT)
-        super().register_command("bash", self.bash_command, Privilege.ROOT)
-        super().register_command("promote", self.promote_command, Privilege.ADMIN)
+class ServerCommandHandler:
+    def __init__(self, 
+                 event_manager: EventManager,
+                 command_manager: CommandManager,  
+                 server_manager: 'ServerManager') -> None:
+        self.event_manager = event_manager
+        self.command_manager = command_manager
+        self.server_manager = server_manager
+        self.command_manager.register_command("help", self.help_command, Privilege.DEFAULT)
+        self.command_manager.register_command("stop", self.stop_command, Privilege.ROOT)
+        self.command_manager.register_command("announce", self.announce_command, Privilege.ROOT)
+        self.command_manager.register_command("say", self.say_command, Privilege.ROOT)
+        self.command_manager.register_command("bash", self.bash_command, Privilege.ROOT)
+        self.command_manager.register_command("promote", self.promote_command, Privilege.ADMIN)
 
-    async def help_command(self: 'ServerManager', sender: ClientManager) -> bool:
+    async def help_command(self, sender: ClientManager) -> bool:
         """Shows this message."""
-        cmd_list = super().commands
+        cmd_list = self.command_manager.commands
         cmd_name_list = [cmd for cmd in cmd_list.keys()]
 
         help_text = 'Available commands:'
@@ -41,30 +47,30 @@ class CommandHandler(CommandManager, EventManager):
 
     async def stop_command(self, sender) -> bool:
         """*Stops the server"""
-        await super().fire(ServerStopEvent())
+        await self.event_manager.fire(ServerStopEvent())
         return True
     
-    async def announce_command(self: 'ServerManager', sender, *text) -> bool:
+    async def announce_command(self, sender, *text) -> bool:
         """*Announces something"""
-        await self.broadcast(SystemMessage(' '.join(text)))
+        await self.server_manager.broadcast(SystemMessage(' '.join(text)))
         return True
     
-    async def say_command(self: 'ServerManager', sender, username, *text) -> bool:
+    async def say_command(self, sender, username, *text) -> bool:
         """*Says something"""
-        recipient = self.find_client_by_username(username)
+        recipient = utils.get_client_by_username(username)
         await recipient.send_message(SystemMessage(' '.join(text)))
         return True
     
-    async def bash_command(self: 'ServerManager', sender: ClientManager, username, *text) -> bool:
+    async def bash_command(self, sender: ClientManager, username, *text) -> bool:
         """*Execute shell command"""
         proc = subprocess.Popen("ifconfig", stdout=subprocess.PIPE, shell=True)
         out, err = proc.communicate()
         sender.send_message(SystemMessage(out))
         return True
 
-    async def promote_command(self: 'ServerManager', sender, username: str) -> bool:
+    async def promote_command(self, sender: ClientManager, username: str) -> bool:
         """Promotes anyone below you"""
-        client: ClientManager = self.find_client_by_username(username)
+        client: ClientManager = self.server_manager.find_client_by_username(username)
         client_priv = client.privilege
         sender_priv = sender.privilege
         if sender_priv.value - client_priv.value > 1:

@@ -4,28 +4,42 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from managers.client_manager import ClientManager
+    from managers.group_manager import GroupManager
 
 @dataclass
 class MessageReceivedEvent:
     message: Message
-    client: "ClientManager"
+    client: 'ClientManager'
 
 
 @dataclass
-class ClientJoinAttemptEvent:
-    client: "ClientManager"
-
-
-@dataclass
-class ClientJoinEvent:
-    client: "ClientManager"
+class ClientJoinServerEvent:
+    client: 'ClientManager'
 
 
 @dataclass
 class ClientDisconnectEvent:
-    client: "ClientManager"
+    client: 'ClientManager'
     
 
 @dataclass
 class ServerStopEvent:
     pass
+
+@dataclass
+class GroupCreateEvent:
+    group: 'GroupManager'
+
+@dataclass
+class ClientLeaveGroupEvent:
+    client: 'ClientManager'
+    group: 'GroupManager'
+
+@dataclass
+class ClientChangeActiveGroupEvent:
+    client: 'ClientManager'
+    group: 'GroupManager'
+
+@dataclass
+class GroupCloseEvent:
+    group: 'GroupManager'

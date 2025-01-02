@@ -4,7 +4,7 @@ from utils.enums import Privilege, AckCode
 from managers.client_manager import ClientManager
 from typing import Callable
 
-class CommandManager():
+class CommandManager:
     commands: dict[str, tuple[Callable, Privilege]] = {}
 
     def __init__(self) -> None:

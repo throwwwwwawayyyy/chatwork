@@ -4,23 +4,32 @@ from managers.encryption_manager import EncryptionManager
 from managers.event_manager import EventManager
 from objects.events import MessageReceivedEvent, ClientDisconnectEvent
 from objects.messages import ClientMessage, Message
-from utils.enums import State, Privilege
+from utils.enums import Privilege
 from rsa import DecryptionError
+from typing import TYPE_CHECKING
 
-class ClientManager(EventManager):
+if TYPE_CHECKING:
+    from managers.group_manager import GroupManager
+
+
+class ClientManager:
     def __init__(self,
                 reader: asyncio.StreamReader,
                 writer: asyncio.StreamWriter,
-                state: State) -> None:
+                event_manager: EventManager,
+                encryption_manager: EncryptionManager) -> None:
         self.is_connected = True
         self.logger = logging.getLogger(__name__)
         self.reader = reader
         self.writer = writer
-        self.state = state
         self.ip, self.port = writer.get_extra_info('peername')
         self.username = None
+        self.active_group: GroupManager = None
+        self.groups: list[GroupManager] = []
         self.privilege = Privilege.DEFAULT
-        self.encryption_manager = EncryptionManager()
+        self.event_manager = event_manager
+        self.encryption_manager = encryption_manager
+
 
         self.logger.debug(f"Connected from: ({self.ip}, {self.port})")
         
@@ -34,7 +43,7 @@ class ClientManager(EventManager):
             if not client_message:
                 break
 
-            await super().fire(MessageReceivedEvent(client_message, self))
+            await self.event_manager.fire(MessageReceivedEvent(client_message, self))
 
     async def start_client(self) -> None:
         self.logger.debug("Starting client")
@@ -42,6 +51,8 @@ class ClientManager(EventManager):
 
     async def disconnect(self) -> None:
         self.writer.close()
+        for group in self.groups:
+            group.remove_client(self)
         self.is_connected = False
         
     async def send_message(self, message: Message):
@@ -51,7 +62,7 @@ class ClientManager(EventManager):
             encrypted_raw_message = self.encryption_manager.encrypt(raw_message)
             self.writer.write(encrypted_raw_message)
         except ConnectionResetError:
-            await super().fire(ClientDisconnectEvent(self))
+            await self.event_manager.fire(ClientDisconnectEvent(self))
         
     async def read_message(self) -> Message:
         try:
@@ -59,4 +70,4 @@ class ClientManager(EventManager):
             raw_message = self.encryption_manager.decrypt(encrypted_raw_message)
             return Message.from_bytes(raw_message)
         except (DecryptionError, ConnectionResetError):
-            await super().fire(ClientDisconnectEvent(self))
+            await self.event_manager.fire(ClientDisconnectEvent(self))

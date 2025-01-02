@@ -1,19 +1,20 @@
 import logging
 
 class EventManager:
-    logger = logging.getLogger(__name__)
-    listeners: dict = {}
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.listeners: dict = {}
     
     def listen(self, event_type, listener) -> None:
-        EventManager.logger.debug(f"Listening to: {event_type}")
-        if event_type not in EventManager.listeners:
-            EventManager.listeners[event_type] = []
-        EventManager.listeners[event_type].append(listener)
+        self.logger.debug(f"Listening to: {event_type}")
+        if event_type not in self.listeners:
+            self.listeners[event_type] = []
+        self.listeners[event_type].append(listener)
 
     async def fire(self, event) -> None:
-        EventManager.logger.debug(f"Event fired: {event}")
+        self.logger.debug(f"Event fired: {event}")
         try:
-            for listener in EventManager.listeners[type(event)]:
+            for listener in self.listeners[type(event)]:
                 await listener(event)
         except Exception as e:
-            EventManager.logger.error(e)
+            self.logger.error(e)

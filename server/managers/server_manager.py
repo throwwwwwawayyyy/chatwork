@@ -1,29 +1,53 @@
-from managers.client_manager import ClientManager
-from handlers.server_handler import ServerHandler
-from handlers.command_handler import CommandHandler
-from utils.enums import State
-from objects.messages import AckMessage, AuthMessage, Message
-from objects.events import ClientJoinEvent
-from utils import validators
-from utils.enums import AckCode, Privilege
 import asyncio
 import logging
+from managers.client_manager import ClientManager
+from handlers.server_event_handler import ServerEventHandler
+from handlers.server_command_handler import ServerCommandHandler
+from objects.messages import AckMessage, AuthMessage, Message
+from objects.events import ClientJoinServerEvent, GroupCreateEvent, ClientChangeActiveGroupEvent
+from utils import validators
+from utils.enums import AckCode, Privilege
+from managers.event_manager import EventManager
+from managers.encryption_manager import EncryptionManager
+from managers.command_manager import CommandManager
+from managers.group_manager import GroupManager
+from utils import utils
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from managers.group_manager import GroupManager
 
 
-class ServerManager(ServerHandler, CommandHandler):
-    def __init__(self) -> None:
-        ServerHandler.__init__(self)
-        CommandHandler.__init__(self)
+class ServerManager:
+    def __init__(self, event_manager: EventManager, 
+                 encryption_manager: EncryptionManager,
+                 command_manager: CommandManager) -> None:
         self.logger = logging.getLogger(__name__)
         self.server: asyncio.Server = None
+
         self.clients: list[ClientManager] = []
         self.usernames: list[str] = []
+
+        self.groups: list[GroupManager] = []
+        self.group_names: list[str] = []
+        self.global_group: GroupManager = GroupManager('global', event_manager)
+
         self.tasks: set[asyncio.Task] = set()
         self.is_running = True
 
+        self.event_manager = event_manager
+        self.encryption_manager = encryption_manager
+        self.server_handler = ServerEventHandler(event_manager, command_manager, self)
+        self.command_handler = ServerCommandHandler(event_manager, command_manager, self)
+
     @staticmethod
-    async def create(ip: str, port: int) -> 'ServerManager':
-        obj = ServerManager()
+    async def create(event_manager: EventManager,
+                     encryption_manager: EncryptionManager,
+                     command_manager: CommandManager,
+                     ip: str,
+                     port: int) -> 'ServerManager':
+        obj = ServerManager(event_manager, encryption_manager, command_manager)
+        await event_manager.fire(GroupCreateEvent(GroupManager('global', event_manager)))
         obj.server = await asyncio.start_server(obj.handle_client, ip, port)
 
         addresses = ', '.join(str(sock.getsockname()) for sock in obj.server.sockets)
@@ -35,17 +59,20 @@ class ServerManager(ServerHandler, CommandHandler):
         while self.is_running:
             await asyncio.sleep(0.5)
 
-    async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    async def handle_client(self, 
+                            reader: asyncio.StreamReader, 
+                            writer: asyncio.StreamWriter) -> None:
         task = asyncio.create_task(self._handle_client_task(reader, writer))
         self.tasks.add(task)
         task.add_done_callback(self.tasks.discard)
 
     async def _handle_client_task(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        client = ClientManager(reader, writer, State.AUTH)
+        client = ClientManager(reader, writer, self.event_manager, self.encryption_manager)
         await client.init_keys()
         while self.is_running and client.is_connected:
             if await self.process_credentials(client):
-                await super().fire(ClientJoinEvent(client))
+                await self.event_manager.fire(ClientJoinServerEvent(client))
+                await self.event_manager.fire(ClientChangeActiveGroupEvent(client, self.global_group))
                 await client.start_client()
 
     async def process_credentials(self, client: ClientManager):
@@ -72,15 +99,6 @@ class ServerManager(ServerHandler, CommandHandler):
         
         return True
 
-    async def broadcast(self, 
-                        message: Message, 
-                        *client_validators: tuple[callable]) -> None:
-        self.logger.debug(f"Broadcasting message: {message} to clients: {self.clients}")
-        for client in self.clients:
-            is_valid = all([validator(client) for validator in client_validators])
-            if is_valid:
-                await client.send_message(message)
-
     def add_client(self, client: ClientManager):
         self.clients.append(client)
         self.usernames.append(client.username)
@@ -90,6 +108,23 @@ class ServerManager(ServerHandler, CommandHandler):
         if client in self.clients:
             self.clients.remove(client)
             self.usernames.remove(client.username)
+
+    async def add_group(self, group: GroupManager):
+        self.groups.append(group)
+        self.group_names.append(group.name)
+
+    async def remove_group(self, group: GroupManager):
+        self.groups.remove(group)
+        self.group_names.remove(group.name)
+
+    async def broadcast(self, 
+                        msg: Message, 
+                        *group_validators: tuple[callable]) -> None:
+        self.logger.debug(f"Broadcasting message: {msg} to groups: {self.groups}")
+        for group in self.groups:
+            is_valid = all([validator(group) for validator in group_validators])
+            if is_valid:
+                await group.broadcast(msg)
 
     async def stop(self):
         self.logger.debug("Stopping the server...")
@@ -103,9 +138,4 @@ class ServerManager(ServerHandler, CommandHandler):
 
         for task in self.tasks:
             task.cancel()
-
-    def find_client_by_username(self, username: str) -> ClientManager:
-        for client in self.clients:
-            if client.username == username:
-                return client
 

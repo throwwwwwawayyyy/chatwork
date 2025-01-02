@@ -35,8 +35,3 @@ class Privilege(Enum):
             return Privilege(self.value + 1)
         except ValueError:
             return self
-
-
-class State(Enum):
-    AUTH = 0
-    CONNECTED = 1
